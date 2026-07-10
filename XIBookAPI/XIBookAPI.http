@@ -1,0 +1,6 @@
+@XIBookAPI_HostAddress = http://localhost:5271
+
+GET {{XIBookAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
