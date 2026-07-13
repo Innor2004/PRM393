@@ -10,8 +10,29 @@ public static class DbInitializer
     public static void Initialize(AppDbContext db)
     {
         // Recreate the database to ensure all tables exist
-        db.Database.EnsureDeleted();
         db.Database.EnsureCreated();
+
+        // Seed Users matching the Flutter app's mock/demo credentials
+        if (!db.Users.Any())
+        {
+            db.Users.AddRange(
+                new User
+                {
+                    Name = "Nam",
+                    Email = "demo@test.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    Role = "Student"
+                },
+                new User
+                {
+                    Name = "Quản trị viên",
+                    Email = "admin@test.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                    Role = "Admin"
+                }
+            );
+            db.SaveChanges();
+        }
 
         // Seed Badges
         if (!db.Badges.Any())
