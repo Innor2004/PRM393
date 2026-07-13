@@ -14,7 +14,10 @@ class QuizProvider extends ChangeNotifier {
   bool _isSubmitted = false;
   int _correctCount = 0;
   bool _useBackend = false;
+  bool _isLoading = false;
+
   bool get useBackend => _useBackend;
+  bool get isLoading => _isLoading;
 
   List<Question> get questions => _questions;
   int get currentIndex => _currentIndex;
@@ -24,25 +27,24 @@ class QuizProvider extends ChangeNotifier {
   int get correctCount => _correctCount;
   double get score => _questions.isEmpty ? 0 : (_correctCount / _questions.length) * 10;
 
-  void loadQuestions(int lessonId) {
+  Future<void> loadQuestions(int lessonId) async {
+    _isLoading = true;
     _useBackend = _backend.isAvailable;
     _reset();
+    notifyListeners();
 
     if (_useBackend) {
-      _loadQuestionsFromBackend(lessonId);
+      try {
+        final data = await _backend.getList('/lessons/$lessonId/questions');
+        _questions = data.map((j) => Question.fromJson(Map<String, dynamic>.from(j))).toList();
+      } catch (_) {
+        _questions = _api.getQuestions(lessonId);
+      }
     } else {
       _questions = _api.getQuestions(lessonId);
-      notifyListeners();
     }
-  }
 
-  Future<void> _loadQuestionsFromBackend(int lessonId) async {
-    try {
-      final data = await _backend.getList('/lessons/$lessonId/questions');
-      _questions = data.map((j) => Question.fromJson(Map<String, dynamic>.from(j))).toList();
-    } catch (_) {
-      _questions = _api.getQuestions(lessonId);
-    }
+    _isLoading = false;
     notifyListeners();
   }
 
