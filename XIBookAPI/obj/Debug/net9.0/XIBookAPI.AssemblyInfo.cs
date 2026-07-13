@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("XIBookAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1317c41c975da53efb06e894445857d1e394a2a8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb35f2fd6475c963524a589fcd5f0bda94137fa5")]
 [assembly: System.Reflection.AssemblyProductAttribute("XIBookAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("XIBookAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
