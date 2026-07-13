@@ -15,23 +15,29 @@ class User {
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
-  factory User.fromJson(Map<String, dynamic> json) => User(
-        id: json['id'] as int,
-        name: json['name'] as String,
-        email: json['email'] as String,
-        role: json['role'] as String? ?? 'Student',
-        avatarUrl: json['avatar_url'] as String?,
-        createdAt: json['created_at'] != null
-            ? DateTime.parse(json['created_at'] as String)
-            : DateTime.now(),
-      );
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      email: json['email'] as String,
+      role: json['role'] as String? ?? 'Student',
+      avatarUrl: (json['avatarUrl'] ?? json['avatar_url']) as String?,
+      createdAt: (json['createdAt'] ?? json['created_at']) != null
+          ? DateTime.parse(
+        (json['createdAt'] ?? json['created_at']) as String,
+      )
+          : DateTime.now(),
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'role': role,
-        'avatar_url': avatarUrl,
-        'created_at': createdAt.toIso8601String(),
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'role': role,
+      'avatar_url': avatarUrl,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 }
