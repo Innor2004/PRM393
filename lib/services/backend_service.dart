@@ -3,13 +3,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter/foundation.dart';
+
 class BackendService {
   static final BackendService _instance = BackendService._();
   factory BackendService() => _instance;
   BackendService._();
 
   static const String _baseUrlKey = 'backend_base_url';
-  String _baseUrl = 'http://10.0.2.2:5271/api';
+  String _baseUrl = kIsWeb ? 'http://localhost:5271/api' : 'http://10.0.2.2:5271/api';
   bool _isAvailable = false;
 
   String get baseUrl => _baseUrl;
@@ -18,6 +20,9 @@ class BackendService {
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _baseUrl = prefs.getString(_baseUrlKey) ?? _baseUrl;
+    if (kIsWeb && _baseUrl.contains('10.0.2.2')) {
+      _baseUrl = 'http://localhost:5271/api';
+    }
   }
 
   Future<void> setBaseUrl(String url) async {
@@ -28,11 +33,14 @@ class BackendService {
 
   Future<void> checkHealth() async {
     try {
+      debugPrint('Checking health at: $_baseUrl/chapters');
       final res = await http.get(
         Uri.parse('$_baseUrl/chapters'),
       ).timeout(const Duration(seconds: 3));
-      _isAvailable = res.statusCode == 200;
-    } catch (_) {
+      _isAvailable = res.statusCode == 200 || res.statusCode == 401;
+      debugPrint('Health check response code: ${res.statusCode}, isAvailable: $_isAvailable');
+    } catch (e) {
+      debugPrint('Health check exception: $e');
       _isAvailable = false;
     }
   }
