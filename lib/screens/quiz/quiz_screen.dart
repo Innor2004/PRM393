@@ -21,9 +21,10 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final quiz = context.read<QuizProvider>();
-      quiz.loadQuestions(widget.lesson.id);
+      await quiz.loadQuestions(widget.lesson.id);
+      if (!mounted) return;
       final totalSeconds = quiz.totalQuestions * 60;
       setState(() => _secondsRemaining = totalSeconds);
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -68,6 +69,24 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   Widget build(BuildContext context) {
     final quiz = context.watch<QuizProvider>();
+
+    if (quiz.isLoading) {
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.bgDarker, AppColors.bgDark],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Scaffold(
+          appBar: AppBar(title: Text('Bài tập: ${widget.lesson.title}')),
+          body: const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        ),
+      );
+    }
 
     if (quiz.questions.isEmpty) {
       return Container(

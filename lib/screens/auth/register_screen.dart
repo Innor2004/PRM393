@@ -40,6 +40,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  Widget _buildConnectionStatus(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final isOnline = auth.useBackend;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isOnline 
+            ? AppColors.success.withValues(alpha: 0.15) 
+            : AppColors.warning.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isOnline 
+              ? AppColors.success.withValues(alpha: 0.3) 
+              : AppColors.warning.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isOnline ? Icons.cloud_done : Icons.cloud_off,
+            color: isOnline ? AppColors.success : AppColors.warning,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              isOnline 
+                  ? 'Đã kết nối máy chủ SQL\n(${auth.backendUrl.replaceFirst('http://', '').replaceFirst('/api', '')})'
+                  : 'Ngoại tuyến - Dùng giả lập (Không lưu SQL)',
+              style: TextStyle(
+                color: isOnline ? AppColors.success : AppColors.warning,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,7 +120,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: const Icon(Icons.person_add,
                           size: 36, color: Colors.white),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 16),
+                    _buildConnectionStatus(context),
+                    const SizedBox(height: 20),
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
