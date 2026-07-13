@@ -19,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen>
   bool _obscurePassword = true;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
-
   
   @override
   void initState() {
