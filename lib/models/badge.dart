@@ -13,6 +13,7 @@ class Badge {
     this.requiredScore = 0,
   });
 
+
   factory Badge.fromJson(Map<String, dynamic> json) => Badge(
         id: json['id'] as int,
         name: json['name'] as String,
