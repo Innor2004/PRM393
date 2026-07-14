@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("XIBookAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2749e0a4ee74de9b0a9f1f4d6f6e41769e954116")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4bb9a4b9d280cc8a70823a0b26c8b87eb467a84e")]
 [assembly: System.Reflection.AssemblyProductAttribute("XIBookAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("XIBookAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
