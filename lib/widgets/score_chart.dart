@@ -5,8 +5,9 @@ import '../theme.dart';
 
 class ScoreChart extends StatelessWidget {
   final List<Progress> progressList;
+  final Map<int, String>? lessonTooltips;
 
-  const ScoreChart({super.key, required this.progressList});
+  const ScoreChart({super.key, required this.progressList, this.lessonTooltips});
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +41,7 @@ class ScoreChart extends StatelessWidget {
     }).toList();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.bgDark.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
@@ -52,28 +53,28 @@ class ScoreChart extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  gradient: const LinearGradient(colors: [
+                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(colors: [
                     AppColors.accent,
                     Color(0xFF06B6D4),
                   ]),
                 ),
                 child: const Icon(Icons.show_chart,
-                    color: Colors.white, size: 20),
+                    color: Colors.white, size: 18),
               ),
-              const SizedBox(width: 10),
-              const Text('Biểu đồ điểm số',
+              const SizedBox(width: 8),
+              Text('Biểu đồ điểm số',
                   style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textMain)),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           SizedBox(
-            height: 180,
+            height: 100,
             child: LineChart(
               LineChartData(
                 gridData: FlGridData(
@@ -90,23 +91,8 @@ class ScoreChart extends StatelessWidget {
                       sideTitles: SideTitles(showTitles: false)),
                   topTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      getTitlesWidget: (value, meta) {
-                        final idx = value.toInt();
-                        if (idx >= 0 && idx < scores.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text('${idx + 1}',
-                                style:
-                                    const TextStyle(color: AppColors.textMuted, fontSize: 10)),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
+                  bottomTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
                   ),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
@@ -116,7 +102,7 @@ class ScoreChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) => Text(
                           '${value.toInt()}',
                           style:
-                              const TextStyle(color: AppColors.textMuted, fontSize: 10)),
+                              TextStyle(color: AppColors.textMuted, fontSize: 10)),
                     ),
                   ),
                 ),
@@ -150,13 +136,18 @@ class ScoreChart extends StatelessWidget {
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
                     getTooltipItems: (touchedSpots) => touchedSpots
-                        .map((spot) => LineTooltipItem(
-                              'Bài ${spot.x.toInt() + 1}: ${spot.y.toStringAsFixed(1)}/10',
-                              const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                            ))
-                        .toList(),
+                        .map((spot) {
+                          final idx = spot.x.toInt();
+                          final lid = scores[idx].lessonId;
+                          final label = lessonTooltips?[lid] ?? 'Bài ${idx + 1}';
+                          return LineTooltipItem(
+                            '$label\nĐiểm: ${spot.y.toStringAsFixed(1)}/10',
+                            const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11),
+                          );
+                        }).toList(),
                   ),
                 ),
               ),

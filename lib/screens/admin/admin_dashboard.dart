@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../models/chapter.dart';
 import '../../models/lesson.dart';
 import '../../models/question.dart';
-import '../../services/api_service.dart';
+import '../../services/backend_service.dart';
 import '../../theme.dart';
 import '../../providers/auth_provider.dart';
 
@@ -14,10 +15,86 @@ class AdminDashboard extends StatefulWidget {
   State<AdminDashboard> createState() => _AdminDashboardState();
 }
 
-
 class _AdminDashboardState extends State<AdminDashboard> {
-  final _api = ApiService();
+  final BackendService _backend = BackendService();
   int _selectedIndex = 0;
+  List<Chapter> _chapters = [];
+  Map<int, List<Lesson>> _lessons = {};
+  Map<int, List<Question>> _questions = {};
+  int _totalUsers = 0;
+  int _totalChapters = 0;
+  int _totalLessons = 0;
+  int _totalQuestions = 0;
+  List<Map<String, dynamic>> _userGrowth = [];
+  List<Map<String, dynamic>> _lessonScores = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    await Future.wait([_loadChapters(), _loadStats()]);
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadChapters() async {
+    try {
+      final data = await _backend.getList('/chapters');
+      _chapters = data.map((j) => Chapter.fromJson(Map<String, dynamic>.from(j))).toList();
+      for (final ch in _chapters) {
+        await _loadLessonsForChapter(ch.id);
+      }
+    } catch (e) {
+      debugPrint('Admin load chapters error: $e');
+    }
+  }
+
+  Future<void> _loadLessonsForChapter(int chapterId) async {
+    try {
+      final data = await _backend.getList('/chapters/$chapterId/lessons');
+      _lessons[chapterId] = data.map((j) => Lesson.fromJson(Map<String, dynamic>.from(j))).toList();
+      for (final l in _lessons[chapterId]!) {
+        await _loadQuestionsForLesson(l.id);
+      }
+    } catch (e) {
+      debugPrint('Admin load lessons error: $e');
+    }
+  }
+
+  Future<void> _loadQuestionsForLesson(int lessonId) async {
+    try {
+      final data = await _backend.getList('/lessons/$lessonId/questions');
+      _questions[lessonId] = data.map((j) => Question.fromJson(Map<String, dynamic>.from(j))).toList();
+    } catch (e) {
+      debugPrint('Admin load questions error: $e');
+    }
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final stats = await _backend.getOne('/admin/stats');
+      _totalUsers = (stats['totalUsers'] as num?)?.toInt() ?? 0;
+      _totalChapters = (stats['totalChapters'] as num?)?.toInt() ?? 0;
+      _totalLessons = (stats['totalLessons'] as num?)?.toInt() ?? 0;
+      _totalQuestions = (stats['totalQuestions'] as num?)?.toInt() ?? 0;
+
+      final growth = await _backend.getOne('/admin/stats/user-growth');
+      _userGrowth = (growth['data'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
+
+      final scores = await _backend.getOne('/admin/stats/lesson-scores');
+      _lessonScores = (scores['data'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
+    } catch (e) {
+      debugPrint('Admin load stats error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,118 +104,368 @@ class _AdminDashboardState extends State<AdminDashboard> {
       _buildChapterManager(),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Admin Panel'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: Text(user?.name ?? '',
-                  style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
+    return Container(
+      decoration: BoxDecoration(gradient: AppColors.gradientSurface),
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: const Text('Admin Panel'),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Center(
+                child: Text(user?.name ?? '',
+                    style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await context.read<AuthProvider>().logout();
-              if (context.mounted) {
-                Navigator.of(context).pushReplacementNamed('/login');
-              }
-            },
-          ),
-        ],
-      ),
-      body: screens[_selectedIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-        destinations: const [
-          NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard),
-              label: 'Tổng quan'),
-          NavigationDestination(
-              icon: Icon(Icons.library_books_outlined),
-              selectedIcon: Icon(Icons.library_books),
-              label: 'Quản lý'),
-        ],
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await context.read<AuthProvider>().logout();
+                if (context.mounted) {
+                  Navigator.of(context).pushReplacementNamed('/login');
+                }
+              },
+            ),
+          ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : screens[_selectedIndex],
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+          destinations: const [
+            NavigationDestination(
+                icon: Icon(Icons.dashboard_outlined),
+                selectedIcon: Icon(Icons.dashboard),
+                label: 'Tổng quan'),
+            NavigationDestination(
+                icon: Icon(Icons.library_books_outlined),
+                selectedIcon: Icon(Icons.library_books),
+                label: 'Quản lý'),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildOverview() {
-    final chapters = _api.getChapters();
-    final totalLessons = chapters.fold<int>(0, (sum, c) => sum + _api.getLessons(c.id).length);
-    final totalQuestions = chapters.fold<int>(0, (sum, c) {
-      final lessons = _api.getLessons(c.id);
-      return sum + lessons.fold<int>(0, (s, l) => s + _api.getQuestions(l.id).length);
-    });
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Tổng quan',
+          Text('Tổng quan',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textMain)),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: _statCard('Chương', '${chapters.length}', Icons.library_books, AppColors.primary)),
-              const SizedBox(width: 12),
-              Expanded(child: _statCard('Bài học', '$totalLessons', Icons.menu_book, AppColors.accent)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _statCard('Câu hỏi', '$totalQuestions', Icons.quiz, AppColors.warning)),
-              const SizedBox(width: 12),
-              Expanded(child: _statCard('Học sinh', '1', Icons.people, AppColors.success)),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 600;
+              final spacing = 12.0;
+              if (isWide) {
+                return Row(
+                  children: [
+                    Expanded(child: _statCard('Chương', '$_totalChapters', Icons.library_books, AppColors.primary)),
+                    SizedBox(width: spacing),
+                    Expanded(child: _statCard('Bài học', '$_totalLessons', Icons.menu_book, AppColors.accent)),
+                    SizedBox(width: spacing),
+                    Expanded(child: _statCard('Câu hỏi', '$_totalQuestions', Icons.quiz, AppColors.warning)),
+                    SizedBox(width: spacing),
+                    Expanded(child: _statCard('Học sinh', '$_totalUsers', Icons.people, AppColors.success)),
+                  ],
+                );
+              }
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: [
+                  SizedBox(width: (constraints.maxWidth - spacing) / 2, child: _statCard('Chương', '$_totalChapters', Icons.library_books, AppColors.primary)),
+                  SizedBox(width: (constraints.maxWidth - spacing) / 2, child: _statCard('Bài học', '$_totalLessons', Icons.menu_book, AppColors.accent)),
+                  SizedBox(width: (constraints.maxWidth - spacing) / 2, child: _statCard('Câu hỏi', '$_totalQuestions', Icons.quiz, AppColors.warning)),
+                  SizedBox(width: (constraints.maxWidth - spacing) / 2, child: _statCard('Học sinh', '$_totalUsers', Icons.people, AppColors.success)),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.bgDark.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.glassBorder),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: AppColors.gradientAccent,
-                  ),
-                  child: const Icon(Icons.info_outline, color: Colors.white, size: 24),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Chuyển đến tab "Quản lý" để thêm/sửa/xóa nội dung.',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tổng cộng $totalLessons bài học và $totalQuestions câu hỏi.',
-                        style: TextStyle(color: AppColors.textDim, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 600;
+              if (isWide) {
+                return Row(
+                  children: [
+                    Expanded(child: _buildUserGrowthChart()),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildLessonScoreChart()),
+                  ],
+                );
+              }
+              return Column(
+                children: [
+                  _buildUserGrowthChart(),
+                  const SizedBox(height: 16),
+                  _buildLessonScoreChart(),
+                ],
+              );
+            },
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildUserGrowthChart() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.bgDark.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.glassBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _buildIconBadge(
+                  gradient: LinearGradient(colors: [AppColors.accent, Color(0xFF06B6D4)]),
+                  icon: Icons.trending_up),
+              const SizedBox(width: 10),
+              Text('Tăng trưởng người học',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: _userGrowth.isEmpty
+                ? Center(child: Text('Chưa có dữ liệu', style: TextStyle(color: AppColors.textMuted)))
+                : _buildGrowthLineChart(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGrowthLineChart() {
+    final spots = _userGrowth.asMap().entries.map((e) {
+      final count = (e.value['count'] as num).toDouble();
+      return FlSpot(e.key.toDouble(), count);
+    }).toList();
+
+    final maxY = spots.fold(0.0, (max, s) => s.y > max ? s.y : max) + 1;
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: maxY > 4 ? (maxY / 4).ceilToDouble() : 1,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: AppColors.glassBorder,
+            strokeWidth: 1,
+          ),
+        ),
+        titlesData: FlTitlesData(
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: _userGrowth.length > 10 ? (_userGrowth.length / 10).ceilToDouble() : 1,
+              getTitlesWidget: (value, meta) {
+                final idx = value.toInt();
+                if (idx >= 0 && idx < _userGrowth.length) {
+                  final date = _userGrowth[idx]['date'] as String? ?? '';
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(date.length >= 10 ? date.substring(5, 10) : date,
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 9)),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              interval: maxY > 4 ? (maxY / 4).ceilToDouble() : 1,
+              getTitlesWidget: (value, meta) => Text('${value.toInt()}',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        minX: 0,
+        maxX: (spots.length - 1).toDouble().clamp(0, double.infinity),
+        minY: 0,
+        maxY: maxY,
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: AppColors.accent,
+            barWidth: 3,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                radius: 4,
+                color: AppColors.accent,
+                strokeWidth: 2,
+                strokeColor: AppColors.bgDark,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: AppColors.accent.withValues(alpha: 0.1),
+            ),
+          ),
+        ],
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
+              final idx = spot.x.toInt();
+              final date = idx >= 0 && idx < _userGrowth.length
+                  ? (_userGrowth[idx]['date'] as String? ?? '')
+                  : '';
+              return LineTooltipItem(
+                '$date: ${spot.y.toInt()} người',
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLessonScoreChart() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.bgDark.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.glassBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _buildIconBadge(
+                  gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryGlow]),
+                  icon: Icons.bar_chart),
+              const SizedBox(width: 10),
+              Text('Điểm trung bình mỗi bài học',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: _lessonScores.isEmpty
+                ? Center(child: Text('Chưa có dữ liệu', style: TextStyle(color: AppColors.textMuted)))
+                : _buildScoreBarChart(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreBarChart() {
+    final labels = _lessonScores
+        .map((s) => s['lessonId'].toString())
+        .toList();
+    final bars = _lessonScores.asMap().entries.map((e) {
+      final score = (e.value['averageScore'] as num).toDouble();
+      return BarChartGroupData(
+        x: e.key,
+        barRods: [
+          BarChartRodData(
+            toY: score,
+            color: AppColors.primary,
+            width: 16,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+          ),
+        ],
+      );
+    }).toList();
+
+    return BarChart(
+      BarChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 2,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: AppColors.glassBorder,
+            strokeWidth: 1,
+          ),
+        ),
+        titlesData: FlTitlesData(
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              getTitlesWidget: (value, meta) {
+                final idx = value.toInt();
+                if (idx >= 0 && idx < labels.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text('Bài ${labels[idx]}',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 9)),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              interval: 2,
+              getTitlesWidget: (value, meta) => Text('${value.toInt()}',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        minY: 0,
+        maxY: 10,
+        barGroups: bars,
+        barTouchData: BarTouchData(
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final idx = group.x.toInt();
+              final count = idx >= 0 && idx < _lessonScores.length
+                  ? (_lessonScores[idx]['attemptCount'] as num?)?.toInt() ?? 0
+                  : 0;
+              return BarTooltipItem(
+                'Bài ${idx + 1}: ${rod.toY.toStringAsFixed(1)}/10\n($count lượt)',
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconBadge({required Gradient gradient, required IconData icon}) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: gradient,
+      ),
+      child: Icon(icon, color: Colors.white, size: 24),
     );
   }
 
@@ -167,21 +494,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
           const SizedBox(height: 12),
           Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: color)),
-          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
+          Text(label, style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
         ],
       ),
     );
   }
 
   Widget _buildChapterManager() {
-    final chapters = _api.getChapters();
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Row(
             children: [
-              const Text('Danh sách chương',
+              Text('Danh sách chương',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textMain)),
               const Spacer(),
               Container(
@@ -201,8 +527,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: chapters.length,
-            itemBuilder: (_, i) => _buildChapterCard(chapters[i]),
+            itemCount: _chapters.length,
+            itemBuilder: (_, i) => _buildChapterCard(_chapters[i]),
           ),
         ),
       ],
@@ -210,7 +536,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildChapterCard(Chapter chapter) {
-    final lessons = _api.getLessons(chapter.id);
+    final lessons = _lessons[chapter.id] ?? [];
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -228,21 +554,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
         child: ExpansionTile(
           leading: Container(
-            width: 42,
-            height: 42,
+            width: 42, height: 42,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               gradient: AppColors.gradientPrimary,
             ),
-            child: Center(
-              child: Text('${chapter.orderIndex}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-            ),
+            child: Center(child: Text('${chapter.orderIndex}',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))),
           ),
-          title: Text(chapter.title,
-              style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textMain)),
-          subtitle: Text('${lessons.length} bài học',
-              style: const TextStyle(color: AppColors.textMuted)),
+          title: Text(chapter.title, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textMain)),
+          subtitle: Text('${lessons.length} bài học', style: TextStyle(color: AppColors.textMuted)),
           iconColor: AppColors.textMuted,
           collapsedIconColor: AppColors.textMuted,
           children: [
@@ -251,8 +572,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
               children: [
                 TextButton.icon(
                   onPressed: () => _showChapterDialog(chapter: chapter),
-                  icon: const Icon(Icons.edit, size: 16, color: AppColors.accent),
-                  label: const Text('Sửa', style: TextStyle(color: AppColors.accent, fontSize: 13)),
+                  icon: Icon(Icons.edit, size: 16, color: AppColors.accent),
+                  label: Text('Sửa', style: TextStyle(color: AppColors.accent, fontSize: 13)),
                 ),
                 TextButton.icon(
                   onPressed: () => _confirmDeleteChapter(chapter),
@@ -261,8 +582,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
                 TextButton.icon(
                   onPressed: () => _showLessonDialog(chapter.id),
-                  icon: const Icon(Icons.add, size: 16, color: AppColors.primary),
-                  label: const Text('Thêm bài', style: TextStyle(color: AppColors.primary, fontSize: 13)),
+                  icon: Icon(Icons.add, size: 16, color: AppColors.primary),
+                  label: Text('Thêm bài', style: TextStyle(color: AppColors.primary, fontSize: 13)),
                 ),
                 const SizedBox(width: 8),
               ],
@@ -292,15 +613,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Bài ${lesson.orderIndex}: ${lesson.title}',
-                      style: const TextStyle(color: AppColors.textMain, fontWeight: FontWeight.w500)),
+                      style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.w500)),
                   Text('${lesson.estimatedMinutes} phút',
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),
             ),
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppColors.textMuted, size: 20),
+            icon: Icon(Icons.more_vert, color: AppColors.textMuted, size: 20),
             color: AppColors.bgDark,
             onSelected: (v) {
               if (v == 'edit') _showLessonDialog(chapterId, lesson: lesson);
@@ -308,8 +629,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
               if (v == 'delete') _confirmDeleteLesson(chapterId, lesson);
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'edit', child: Text('Sửa', style: TextStyle(color: AppColors.textMain))),
-              const PopupMenuItem(value: 'questions', child: Text('Quản lý câu hỏi', style: TextStyle(color: AppColors.textMain))),
+              PopupMenuItem(value: 'edit', child: Text('Sửa', style: TextStyle(color: AppColors.textMain))),
+              PopupMenuItem(value: 'questions', child: Text('Quản lý câu hỏi', style: TextStyle(color: AppColors.textMain))),
               const PopupMenuItem(value: 'delete', child: Text('Xóa', style: TextStyle(color: Colors.redAccent))),
             ],
           ),
@@ -318,43 +639,66 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
+  Future<void> _refreshChapter(int chapterId) async {
+    try {
+      final data = await _backend.getList('/chapters/$chapterId/lessons');
+      _lessons[chapterId] = data.map((j) => Lesson.fromJson(Map<String, dynamic>.from(j))).toList();
+      for (final l in _lessons[chapterId]!) {
+        final qData = await _backend.getList('/lessons/${l.id}/questions');
+        _questions[l.id] = qData.map((j) => Question.fromJson(Map<String, dynamic>.from(j))).toList();
+      }
+    } catch (_) {}
+  }
+
   void _showChapterDialog({Chapter? chapter}) {
     final titleCtrl = TextEditingController(text: chapter?.title ?? '');
     final descCtrl = TextEditingController(text: chapter?.description ?? '');
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.bgDark,
-        title: Text(chapter != null ? 'Sửa chương' : 'Thêm chương', style: const TextStyle(color: AppColors.textMain)),
+        title: Text(chapter != null ? 'Sửa chương' : 'Thêm chương'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleCtrl,
               decoration: const InputDecoration(labelText: 'Tên chương'),
-              style: const TextStyle(color: AppColors.textMain),
+              style: TextStyle(color: AppColors.textMain),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: descCtrl,
               decoration: const InputDecoration(labelText: 'Mô tả'),
               maxLines: 2,
-              style: const TextStyle(color: AppColors.textMain),
+              style: TextStyle(color: AppColors.textMain),
             ),
           ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (titleCtrl.text.trim().isEmpty) return;
-              if (chapter != null) {
-                _api.updateChapter(chapter.id, titleCtrl.text.trim(), descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim());
-              } else {
-                _api.addChapter(titleCtrl.text.trim(), descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim());
+              try {
+                if (chapter != null) {
+                  await _backend.put('/admin/chapters/${chapter.id}', body: {
+                    'title': titleCtrl.text.trim(),
+                    'description': descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim(),
+                  });
+                } else {
+                  await _backend.post('/admin/chapters', body: {
+                    'bookId': 1,
+                    'title': titleCtrl.text.trim(),
+                    'description': descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim(),
+                    'orderIndex': _chapters.length + 1,
+                  });
+                }
+                Navigator.pop(ctx);
+                await _loadData();
+                setState(() {});
+              } catch (e) {
+                debugPrint('Chapter save error: $e');
               }
-              Navigator.pop(ctx);
-              setState(() {});
             },
             child: Text(chapter != null ? 'Lưu' : 'Thêm'),
           ),
@@ -367,17 +711,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.bgDark,
-        title: const Text('Xóa chương', style: TextStyle(color: AppColors.textMain)),
-        content: Text('Xóa "${chapter.title}" và tất cả bài học bên trong?', style: const TextStyle(color: AppColors.textMuted)),
+        title: const Text('Xóa chương'),
+        content: Text('Xóa "${chapter.title}" và tất cả bài học bên trong?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () {
-              _api.deleteChapter(chapter.id);
-              Navigator.pop(ctx);
-              setState(() {});
+            onPressed: () async {
+              try {
+                await _backend.delete('/admin/chapters/${chapter.id}');
+                Navigator.pop(ctx);
+                await _loadData();
+                setState(() {});
+              } catch (e) {
+                debugPrint('Chapter delete error: $e');
+              }
             },
             child: const Text('Xóa'),
           ),
@@ -393,8 +741,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.bgDark,
-        title: Text(lesson != null ? 'Sửa bài học' : 'Thêm bài học', style: const TextStyle(color: AppColors.textMain)),
+        title: Text(lesson != null ? 'Sửa bài học' : 'Thêm bài học'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -402,21 +749,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
               TextField(
                 controller: titleCtrl,
                 decoration: const InputDecoration(labelText: 'Tên bài học'),
-                style: const TextStyle(color: AppColors.textMain),
+                style: TextStyle(color: AppColors.textMain),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: minCtrl,
                 decoration: const InputDecoration(labelText: 'Số phút'),
                 keyboardType: TextInputType.number,
-                style: const TextStyle(color: AppColors.textMain),
+                style: TextStyle(color: AppColors.textMain),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: contentCtrl,
                 decoration: const InputDecoration(labelText: 'Nội dung (Markdown)'),
                 maxLines: 5,
-                style: const TextStyle(color: AppColors.textMain),
+                style: TextStyle(color: AppColors.textMain),
               ),
             ],
           ),
@@ -424,18 +771,32 @@ class _AdminDashboardState extends State<AdminDashboard> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (titleCtrl.text.trim().isEmpty) return;
               final minutes = int.tryParse(minCtrl.text.trim()) ?? 15;
-              if (lesson != null) {
-                _api.updateLesson(lesson.id, chapterId, titleCtrl.text.trim(),
-                    estimatedMinutes: minutes, contentBody: contentCtrl.text.trim().isEmpty ? null : contentCtrl.text.trim());
-              } else {
-                _api.addLesson(chapterId, titleCtrl.text.trim(),
-                    estimatedMinutes: minutes, contentBody: contentCtrl.text.trim().isEmpty ? null : contentCtrl.text.trim());
+              try {
+                if (lesson != null) {
+                  await _backend.put('/admin/lessons/${lesson.id}', body: {
+                    'title': titleCtrl.text.trim(),
+                    'estimatedMinutes': minutes,
+                    'contentBody': contentCtrl.text.trim().isEmpty ? null : contentCtrl.text.trim(),
+                  });
+                } else {
+                  final existing = _lessons[chapterId] ?? [];
+                  await _backend.post('/admin/lessons', body: {
+                    'chapterId': chapterId,
+                    'title': titleCtrl.text.trim(),
+                    'orderIndex': existing.length + 1,
+                    'estimatedMinutes': minutes,
+                    'contentBody': contentCtrl.text.trim().isEmpty ? null : contentCtrl.text.trim(),
+                  });
+                }
+                Navigator.pop(ctx);
+                await _refreshChapter(chapterId);
+                setState(() {});
+              } catch (e) {
+                debugPrint('Lesson save error: $e');
               }
-              Navigator.pop(ctx);
-              setState(() {});
             },
             child: Text(lesson != null ? 'Lưu' : 'Thêm'),
           ),
@@ -448,17 +809,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.bgDark,
-        title: const Text('Xóa bài học', style: TextStyle(color: AppColors.textMain)),
-        content: Text('Xóa "${lesson.title}"?', style: const TextStyle(color: AppColors.textMuted)),
+        title: const Text('Xóa bài học'),
+        content: Text('Xóa "${lesson.title}"?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () {
-              _api.deleteLesson(chapterId, lesson.id);
-              Navigator.pop(ctx);
-              setState(() {});
+            onPressed: () async {
+              try {
+                await _backend.delete('/admin/lessons/${lesson.id}');
+                Navigator.pop(ctx);
+                await _refreshChapter(chapterId);
+                setState(() {});
+              } catch (e) {
+                debugPrint('Lesson delete error: $e');
+              }
             },
             child: const Text('Xóa'),
           ),
@@ -475,16 +840,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => _QuestionManagerSheet(api: _api, lesson: lesson, onChanged: () {}),
+      builder: (ctx) => _QuestionManagerSheet(
+        backend: _backend,
+        lesson: lesson,
+        onChanged: () async {
+          await _refreshChapter(lesson.chapterId);
+          setState(() {});
+        },
+      ),
     );
   }
 }
 
 class _QuestionManagerSheet extends StatefulWidget {
-  final ApiService api;
+  final BackendService backend;
   final Lesson lesson;
   final VoidCallback onChanged;
-  const _QuestionManagerSheet({required this.api, required this.lesson, required this.onChanged});
+
+  const _QuestionManagerSheet({
+    required this.backend,
+    required this.lesson,
+    required this.onChanged,
+  });
 
   @override
   State<_QuestionManagerSheet> createState() => _QuestionManagerSheetState();
@@ -496,13 +873,24 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
   @override
   void initState() {
     super.initState();
-    questions = widget.api.getQuestions(widget.lesson.id);
+    _loadQuestions();
+  }
+
+  Future<void> _loadQuestions() async {
+    try {
+      final data = await widget.backend.getList('/lessons/${widget.lesson.id}/questions');
+      if (mounted) {
+        setState(() {
+          questions = data.map((j) => Question.fromJson(Map<String, dynamic>.from(j))).toList();
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => questions = []);
+    }
   }
 
   void _refresh() {
-    setState(() {
-      questions = widget.api.getQuestions(widget.lesson.id);
-    });
+    _loadQuestions();
     widget.onChanged();
   }
 
@@ -521,7 +909,7 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
               children: [
                 Expanded(
                   child: Text('Câu hỏi - ${widget.lesson.title}',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textMain)),
                 ),
                 Container(
                   decoration: BoxDecoration(
@@ -534,13 +922,13 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.textMuted),
+                  icon: Icon(Icons.close, color: AppColors.textMuted),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
           ),
-          const Divider(color: AppColors.glassBorder),
+          Divider(color: AppColors.glassBorder),
           Expanded(
             child: questions.isEmpty
                 ? Center(
@@ -549,12 +937,9 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
                       children: [
                         Icon(Icons.quiz_outlined, size: 48, color: AppColors.textDim),
                         const SizedBox(height: 8),
-                        const Text('Chưa có câu hỏi nào', style: TextStyle(color: AppColors.textMuted)),
+                        Text('Chưa có câu hỏi nào', style: TextStyle(color: AppColors.textMuted)),
                         const SizedBox(height: 4),
-                        TextButton(
-                          onPressed: () => _showQuestionDialog(),
-                          child: const Text('Thêm câu hỏi đầu tiên'),
-                        ),
+                        TextButton(onPressed: () => _showQuestionDialog(), child: const Text('Thêm câu hỏi đầu tiên')),
                       ],
                     ),
                   )
@@ -586,23 +971,20 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 28,
-                height: 28,
+                width: 28, height: 28,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: AppColors.gradientPrimary,
                 ),
-                child: Center(
-                  child: Text('${q.id}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-                ),
+                child: Center(child: Text('${q.id}',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(q.questionText,
-                        style: const TextStyle(color: AppColors.textMain, fontWeight: FontWeight.w500)),
+                    Text(q.questionText, style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 8),
                     _optionRow('A', q.optionA, q.correctOption == 'A'),
                     _optionRow('B', q.optionB, q.correctOption == 'B'),
@@ -611,7 +993,7 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
                     if (q.explanation != null && q.explanation!.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Text('Giải thích: ${q.explanation}',
-                          style: const TextStyle(color: AppColors.textDim, fontSize: 12, fontStyle: FontStyle.italic)),
+                          style: TextStyle(color: AppColors.textDim, fontSize: 12, fontStyle: FontStyle.italic)),
                     ],
                   ],
                 ),
@@ -619,7 +1001,7 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
               Column(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.edit, size: 18, color: AppColors.accent),
+                    icon: Icon(Icons.edit, size: 18, color: AppColors.accent),
                     onPressed: () => _showQuestionDialog(question: q),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -627,9 +1009,13 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
                   const SizedBox(height: 4),
                   IconButton(
                     icon: const Icon(Icons.delete, size: 18, color: Colors.redAccent),
-                    onPressed: () {
-                      widget.api.deleteQuestion(widget.lesson.id, q.id);
-                      _refresh();
+                    onPressed: () async {
+                      try {
+                        await widget.backend.delete('/admin/questions/${q.id}');
+                        _refresh();
+                      } catch (e) {
+                        debugPrint('Delete question error: $e');
+                      }
                     },
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -649,8 +1035,7 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
       child: Row(
         children: [
           Container(
-            width: 22,
-            height: 22,
+            width: 22, height: 22,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: correct ? Colors.green.withValues(alpha: 0.2) : Colors.transparent,
@@ -658,21 +1043,16 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
             ),
             child: Center(
               child: Text(label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: correct ? Colors.green : AppColors.textDim,
-                  )),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                      color: correct ? Colors.green : AppColors.textDim)),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(text,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: correct ? Colors.green : AppColors.textMuted,
-                  fontWeight: correct ? FontWeight.w600 : FontWeight.normal,
-                )),
+                style: TextStyle(fontSize: 13,
+                    color: correct ? Colors.green : AppColors.textMuted,
+                    fontWeight: correct ? FontWeight.w600 : FontWeight.normal)),
           ),
           if (correct) const Icon(Icons.check_circle, size: 14, color: Colors.green),
         ],
@@ -693,66 +1073,75 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.bgDark,
-          title: Text(question != null ? 'Sửa câu hỏi' : 'Thêm câu hỏi',
-              style: const TextStyle(color: AppColors.textMain)),
+          title: Text(question != null ? 'Sửa câu hỏi' : 'Thêm câu hỏi'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: textCtrl,
-                  decoration: const InputDecoration(labelText: 'Câu hỏi'),
-                  maxLines: 2,
-                  style: const TextStyle(color: AppColors.textMain),
-                ),
+                TextField(controller: textCtrl, decoration: const InputDecoration(labelText: 'Câu hỏi'),
+                    maxLines: 2, style: TextStyle(color: AppColors.textMain)),
                 const SizedBox(height: 10),
                 TextField(controller: aCtrl, decoration: const InputDecoration(labelText: 'Đáp án A'),
-                    style: const TextStyle(color: AppColors.textMain)),
+                    style: TextStyle(color: AppColors.textMain)),
                 const SizedBox(height: 8),
                 TextField(controller: bCtrl, decoration: const InputDecoration(labelText: 'Đáp án B'),
-                    style: const TextStyle(color: AppColors.textMain)),
+                    style: TextStyle(color: AppColors.textMain)),
                 const SizedBox(height: 8),
                 TextField(controller: cCtrl, decoration: const InputDecoration(labelText: 'Đáp án C'),
-                    style: const TextStyle(color: AppColors.textMain)),
+                    style: TextStyle(color: AppColors.textMain)),
                 const SizedBox(height: 8),
                 TextField(controller: dCtrl, decoration: const InputDecoration(labelText: 'Đáp án D'),
-                    style: const TextStyle(color: AppColors.textMain)),
+                    style: TextStyle(color: AppColors.textMain)),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: correctOpt,
                   dropdownColor: AppColors.bgDark,
                   decoration: const InputDecoration(labelText: 'Đáp án đúng'),
-                  items: ['A', 'B', 'C', 'D'].map((o) => DropdownMenuItem(value: o, child: Text(o, style: const TextStyle(color: AppColors.textMain)))).toList(),
+                  items: ['A', 'B', 'C', 'D']
+                      .map((o) => DropdownMenuItem(value: o, child: Text(o, style: TextStyle(color: AppColors.textMain))))
+                      .toList(),
                   onChanged: (v) => setDialogState(() => correctOpt = v!),
-                  style: const TextStyle(color: AppColors.textMain),
+                  style: TextStyle(color: AppColors.textMain),
                 ),
                 const SizedBox(height: 10),
-                TextField(
-                  controller: explCtrl,
-                  decoration: const InputDecoration(labelText: 'Giải thích (không bắt buộc)'),
-                  maxLines: 2,
-                  style: const TextStyle(color: AppColors.textMain),
-                ),
+                TextField(controller: explCtrl, decoration: const InputDecoration(labelText: 'Giải thích (không bắt buộc)'),
+                    maxLines: 2, style: TextStyle(color: AppColors.textMain)),
               ],
             ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (textCtrl.text.trim().isEmpty) return;
-                if (question != null) {
-                  widget.api.updateQuestion(question.id, widget.lesson.id,
-                      textCtrl.text.trim(), aCtrl.text.trim(), bCtrl.text.trim(), cCtrl.text.trim(), dCtrl.text.trim(),
-                      correctOpt, explanation: explCtrl.text.trim().isEmpty ? null : explCtrl.text.trim());
-                } else {
-                  widget.api.addQuestion(widget.lesson.id,
-                      textCtrl.text.trim(), aCtrl.text.trim(), bCtrl.text.trim(), cCtrl.text.trim(), dCtrl.text.trim(),
-                      correctOpt, explanation: explCtrl.text.trim().isEmpty ? null : explCtrl.text.trim());
+                try {
+                  if (question != null) {
+                    await widget.backend.put('/admin/questions/${question.id}', body: {
+                      'questionText': textCtrl.text.trim(),
+                      'optionA': aCtrl.text.trim(),
+                      'optionB': bCtrl.text.trim(),
+                      'optionC': cCtrl.text.trim(),
+                      'optionD': dCtrl.text.trim(),
+                      'correctOption': correctOpt,
+                      'explanation': explCtrl.text.trim().isEmpty ? null : explCtrl.text.trim(),
+                    });
+                  } else {
+                    await widget.backend.post('/admin/questions', body: {
+                      'lessonId': widget.lesson.id,
+                      'questionText': textCtrl.text.trim(),
+                      'optionA': aCtrl.text.trim(),
+                      'optionB': bCtrl.text.trim(),
+                      'optionC': cCtrl.text.trim(),
+                      'optionD': dCtrl.text.trim(),
+                      'correctOption': correctOpt,
+                      'explanation': explCtrl.text.trim().isEmpty ? null : explCtrl.text.trim(),
+                    });
+                  }
+                  Navigator.pop(ctx);
+                  _refresh();
+                } catch (e) {
+                  debugPrint('Question save error: $e');
                 }
-                Navigator.pop(ctx);
-                _refresh();
               },
               child: Text(question != null ? 'Lưu' : 'Thêm'),
             ),

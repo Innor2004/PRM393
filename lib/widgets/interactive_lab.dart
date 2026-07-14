@@ -60,7 +60,7 @@ class _InteractiveLabState extends State<InteractiveLab> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  gradient: const LinearGradient(colors: [
+                  gradient: LinearGradient(colors: [
                     AppColors.accent,
                     Color(0xFF06B6D4),
                   ]),
@@ -69,7 +69,7 @@ class _InteractiveLabState extends State<InteractiveLab> {
                     color: Colors.white, size: 20),
               ),
               const SizedBox(width: 10),
-              const Text('Phòng thí nghiệm ảo',
+              Text('Phòng thí nghiệm ảo',
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -134,7 +134,7 @@ class _InteractiveLabState extends State<InteractiveLab> {
       child: Column(
         children: [
           Text(formula,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'monospace',
@@ -143,7 +143,7 @@ class _InteractiveLabState extends State<InteractiveLab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('Kết quả: ',
+              Text('Kết quả: ',
                   style: TextStyle(
                       fontSize: 16, color: AppColors.textMuted)),
               ShaderMask(
@@ -218,10 +218,10 @@ class _InteractiveLabState extends State<InteractiveLab> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(label,
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.textMuted)),
+              style: TextStyle(
+                  fontSize: 13, color: AppColors.textMuted)),
               Text(value.toStringAsFixed(1),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
                       color: AppColors.textMain)),
@@ -255,7 +255,7 @@ class _InteractiveLabState extends State<InteractiveLab> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(
+              style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: AppColors.textMain)),
           ShaderMask(

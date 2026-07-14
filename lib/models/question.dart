@@ -23,25 +23,25 @@ class Question {
 
   factory Question.fromJson(Map<String, dynamic> json) => Question(
         id: json['id'] as int,
-        lessonId: json['lesson_id'] as int,
-        questionText: json['question_text'] as String,
-        optionA: json['option_a'] as String,
-        optionB: json['option_b'] as String,
-        optionC: json['option_c'] as String,
-        optionD: json['option_d'] as String,
-        correctOption: json['correct_option'] as String,
+        lessonId: json['lessonId'] as int? ?? json['lesson_id'] as int,
+        questionText: json['questionText'] as String? ?? json['question_text'] as String,
+        optionA: json['optionA'] as String? ?? json['option_a'] as String,
+        optionB: json['optionB'] as String? ?? json['option_b'] as String,
+        optionC: json['optionC'] as String? ?? json['option_c'] as String,
+        optionD: json['optionD'] as String? ?? json['option_d'] as String,
+        correctOption: json['correctOption'] as String? ?? json['correct_option'] as String,
         explanation: json['explanation'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'lesson_id': lessonId,
-        'question_text': questionText,
-        'option_a': optionA,
-        'option_b': optionB,
-        'option_c': optionC,
-        'option_d': optionD,
-        'correct_option': correctOption,
+        'lessonId': lessonId,
+        'questionText': questionText,
+        'optionA': optionA,
+        'optionB': optionB,
+        'optionC': optionC,
+        'optionD': optionD,
+        'correctOption': correctOption,
         'explanation': explanation,
       };
 

@@ -18,26 +18,28 @@ class Progress {
   }) : updatedAt = updatedAt ?? DateTime.now();
 
   factory Progress.fromJson(Map<String, dynamic> json) => Progress(
-        id: json['id'] as int,
-        userId: json['user_id'] as int,
-        lessonId: json['lesson_id'] as int,
-        isCompleted: json['is_completed'] as bool? ?? false,
-        quizScore: (json['quiz_score'] as num?)?.toDouble() ?? 0,
+        id: json['id'] as int? ?? DateTime.now().millisecondsSinceEpoch,
+        userId: json['userId'] as int? ?? json['user_id'] as int? ?? 1,
+        lessonId: json['lessonId'] as int? ?? json['lesson_id'] as int,
+        isCompleted: json['isCompleted'] as bool? ?? json['is_completed'] as bool? ?? false,
+        quizScore: (json['quizScore'] as num?)?.toDouble() ?? (json['quiz_score'] as num?)?.toDouble() ?? 0,
         completionPercent:
-            (json['completion_percent'] as num?)?.toDouble() ?? 0,
-        updatedAt: json['updated_at'] != null
-            ? DateTime.parse(json['updated_at'] as String)
-            : DateTime.now(),
+            (json['completionPercent'] as num?)?.toDouble() ?? (json['completion_percent'] as num?)?.toDouble() ?? 0,
+        updatedAt: json['updatedAt'] != null
+            ? DateTime.parse(json['updatedAt'] as String)
+            : json['updated_at'] != null
+                ? DateTime.parse(json['updated_at'] as String)
+                : DateTime.now(),
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'user_id': userId,
-        'lesson_id': lessonId,
-        'is_completed': isCompleted,
-        'quiz_score': quizScore,
-        'completion_percent': completionPercent,
-        'updated_at': updatedAt.toIso8601String(),
+        'userId': userId,
+        'lessonId': lessonId,
+        'isCompleted': isCompleted,
+        'quizScore': quizScore,
+        'completionPercent': completionPercent,
+        'updatedAt': updatedAt.toIso8601String(),
       };
 
   Progress copyWith({

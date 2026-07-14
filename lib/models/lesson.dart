@@ -17,20 +17,20 @@ class Lesson {
 
   factory Lesson.fromJson(Map<String, dynamic> json) => Lesson(
         id: json['id'] as int,
-        chapterId: json['chapter_id'] as int,
+        chapterId: json['chapterId'] as int? ?? json['chapter_id'] as int,
         title: json['title'] as String,
-        orderIndex: json['order_index'] as int,
-        estimatedMinutes: json['estimated_minutes'] as int? ?? 15,
-        contentBody: json['content_body'] as String?,
+        orderIndex: json['orderIndex'] as int? ?? json['order_index'] as int,
+        estimatedMinutes: json['estimatedMinutes'] as int? ?? json['estimated_minutes'] as int? ?? 15,
+        contentBody: json['contentBody'] as String? ?? json['content_body'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'chapter_id': chapterId,
+        'chapterId': chapterId,
         'title': title,
-        'order_index': orderIndex,
-        'estimated_minutes': estimatedMinutes,
-        'content_body': contentBody,
+        'orderIndex': orderIndex,
+        'estimatedMinutes': estimatedMinutes,
+        'contentBody': contentBody,
       };
 
   Lesson copyWith({
