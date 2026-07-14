@@ -29,6 +29,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Admin Panel'),
         actions: [
           Padding(

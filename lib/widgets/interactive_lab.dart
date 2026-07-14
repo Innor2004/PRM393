@@ -239,6 +239,7 @@ class _InteractiveLabState extends State<InteractiveLab> {
               value: value.clamp(min, max),
               min: min,
               max: max,
+              divisions: ((max - min) / 0.5).round(),
               onChanged: (v) => setState(() => onChanged(v)),
             ),
           ),

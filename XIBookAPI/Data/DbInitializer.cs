@@ -29,18 +29,53 @@ public static class DbInitializer
                     Email = "admin@test.com",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
                     Role = "Admin"
+                },
+                new User
+                {
+                    Name = "Test 1",
+                    Email = "test1@test.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123"),
+                    Role = "Student"
+                },
+                new User
+                {
+                    Name = "Test 2",
+                    Email = "test2@test.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123"),
+                    Role = "Student"
+                },
+                new User
+                {
+                    Name = "Test 3",
+                    Email = "test3@test.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123"),
+                    Role = "Student"
+                },
+                new User
+                {
+                    Name = "User A",
+                    Email = "usera@test.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    Role = "Student"
+                },
+                new User
+                {
+                    Name = "User B",
+                    Email = "userb@test.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    Role = "Student"
                 }
             );
             db.SaveChanges();
         }
 
-        // Seed Badges
+        // Seed Badges (matching Flutter mock data in progress_provider.dart)
         if (!db.Badges.Any())
         {
             db.Badges.AddRange(
-                new Badge { Name = "Nhập môn Vật lý", Description = "Hoàn thành chương đầu tiên", IconUrl = "📚", RequiredScore = 5 },
-                new Badge { Name = "Thiên tài Động lực học", Description = "Đạt điểm tối đa chương 2", IconUrl = "⚡", RequiredScore = 8 },
-                new Badge { Name = "Chuyên gia Năng lượng", Description = "Hoàn thành toàn bộ câu hỏi ôn tập", IconUrl = "🔥", RequiredScore = 10 }
+                new Badge { Name = "Nhà vật lý", Description = "Đạt điểm 10 Vật lý đại cương", IconUrl = "🏆", RequiredScore = 100 },
+                new Badge { Name = "Học sinh chăm chỉ", Description = "Hoàn thành 5 bài học", IconUrl = "⭐", RequiredScore = 50 },
+                new Badge { Name = "Nhà thám hiểm", Description = "Hoàn thành tất cả chương", IconUrl = "🌟", RequiredScore = 200 }
             );
             db.SaveChanges();
         }
