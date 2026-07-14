@@ -1,10 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../models/question.dart';
-import '../services/api_service.dart';
 import '../services/backend_service.dart';
 
 class QuizProvider extends ChangeNotifier {
-  final ApiService _api = ApiService();
   final BackendService _backend = BackendService();
 
   List<Question> _questions = [];
@@ -13,12 +11,9 @@ class QuizProvider extends ChangeNotifier {
   final Map<int, String> _answers = {};
   bool _isSubmitted = false;
   int _correctCount = 0;
-  bool _useBackend = false;
   bool _isLoading = false;
 
-  bool get useBackend => _useBackend;
   bool get isLoading => _isLoading;
-
   List<Question> get questions => _questions;
   int get currentIndex => _currentIndex;
   int get totalQuestions => _questions.length;
@@ -29,19 +24,15 @@ class QuizProvider extends ChangeNotifier {
 
   Future<void> loadQuestions(int lessonId) async {
     _isLoading = true;
-    _useBackend = _backend.isAvailable;
     _reset();
     notifyListeners();
 
-    if (_useBackend) {
-      try {
-        final data = await _backend.getList('/lessons/$lessonId/questions');
-        _questions = data.map((j) => Question.fromJson(Map<String, dynamic>.from(j))).toList();
-      } catch (_) {
-        _questions = _api.getQuestions(lessonId);
-      }
-    } else {
-      _questions = _api.getQuestions(lessonId);
+    try {
+      final data = await _backend.getList('/lessons/$lessonId/questions');
+      _questions = data.map((j) => Question.fromJson(Map<String, dynamic>.from(j))).toList();
+    } catch (e) {
+      debugPrint('loadQuestions error: $e');
+      _questions = [];
     }
 
     _isLoading = false;
@@ -76,43 +67,36 @@ class QuizProvider extends ChangeNotifier {
     }
   }
 
-  void submitQuiz() {
+  Future<double> submitToBackend(int lessonId) async {
     if (_selectedAnswer != null) {
       _answers[_currentIndex] = _selectedAnswer!;
     }
-    _correctCount = 0;
-    for (int i = 0; i < _questions.length; i++) {
-      final userAnswer = _answers[i];
-      if (userAnswer == _questions[i].correctOption) {
-        _correctCount++;
-      }
-    }
-    _isSubmitted = true;
-    notifyListeners();
-  }
-
-  Future<double> submitToBackend(int lessonId) async {
-    if (!_useBackend) {
-      submitQuiz();
-      return score;
-    }
 
     final answers = _answers.entries.map((e) => {
-      'question_id': _questions[e.key].id,
-      'selected_option': e.value,
+      'questionId': _questions[e.key].id,
+      'selectedOption': e.value,
     }).toList();
 
     try {
       final res = await _backend.post('/quiz/submit', body: {
-        'lesson_id': lessonId,
+        'lessonId': lessonId,
         'answers': answers,
       });
-      _correctCount = res['correct_count'] as int? ?? _correctCount;
+      _correctCount = res['correctCount'] as int? ?? 0;
       _isSubmitted = true;
       notifyListeners();
       return (res['score'] as num?)?.toDouble() ?? score;
-    } catch (_) {
-      submitQuiz();
+    } catch (e) {
+      debugPrint('submitToBackend error: $e');
+      _correctCount = 0;
+      for (int i = 0; i < _questions.length; i++) {
+        final userAnswer = _answers[i];
+        if (userAnswer == _questions[i].correctOption) {
+          _correctCount++;
+        }
+      }
+      _isSubmitted = true;
+      notifyListeners();
       return score;
     }
   }

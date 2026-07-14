@@ -40,61 +40,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Widget _buildConnectionStatus(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final isOnline = auth.useBackend;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isOnline 
-            ? AppColors.success.withValues(alpha: 0.15) 
-            : AppColors.warning.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isOnline 
-              ? AppColors.success.withValues(alpha: 0.3) 
-              : AppColors.warning.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isOnline ? Icons.cloud_done : Icons.cloud_off,
-            color: isOnline ? AppColors.success : AppColors.warning,
-            size: 18,
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              isOnline 
-                  ? 'Đã kết nối máy chủ SQL\n(${auth.backendUrl.replaceFirst('http://', '').replaceFirst('/api', '')})'
-                  : 'Ngoại tuyến - Dùng giả lập (Không lưu SQL)',
-              style: TextStyle(
-                color: isOnline ? AppColors.success : AppColors.warning,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Đăng ký')),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.bgDarker, AppColors.bgDark],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        decoration: BoxDecoration(gradient: AppColors.gradientSurface),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -121,15 +72,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           size: 36, color: Colors.white),
                     ),
                     const SizedBox(height: 16),
-                    _buildConnectionStatus(context),
-                    const SizedBox(height: 20),
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
                         labelText: 'Họ và tên',
                         prefixIcon: Icon(Icons.person_outline),
                       ),
-                      style: const TextStyle(color: AppColors.textMain),
+                      style: TextStyle(color: AppColors.textMain),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Vui lòng nhập họ tên';
@@ -145,7 +94,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         labelText: 'Email',
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
-                      style: const TextStyle(color: AppColors.textMain),
+                      style: TextStyle(color: AppColors.textMain),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Vui lòng nhập email';
@@ -171,10 +120,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               () => _obscurePassword = !_obscurePassword),
                         ),
                       ),
-                      style: const TextStyle(color: AppColors.textMain),
+                      style: TextStyle(color: AppColors.textMain),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Vui lòng nhập mật khẩu';
+                          return 'Vui lòng nhập password';
                         }
                         if (value.length < 6) {
                           return 'Mật khẩu tối thiểu 6 ký tự';
@@ -190,7 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         labelText: 'Xác nhận mật khẩu',
                         prefixIcon: Icon(Icons.lock_outlined),
                       ),
-                      style: const TextStyle(color: AppColors.textMain),
+                      style: TextStyle(color: AppColors.textMain),
                       validator: (value) {
                         if (value != _passwordController.text) {
                           return 'Mật khẩu không khớp';

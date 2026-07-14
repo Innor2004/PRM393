@@ -22,6 +22,28 @@ public class LessonsController : ControllerBase
         return Ok(new { data = lesson });
     }
 
+    [HttpGet("search")]
+    public async Task<ActionResult> SearchLessons([FromQuery] string q)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+            return Ok(new { data = new List<object>() });
+
+        var query = q.Trim().ToLowerInvariant();
+        var lessons = await _db.Lessons
+            .Where(l => l.Title.ToLower().Contains(query))
+            .OrderBy(l => l.OrderIndex)
+            .Select(l => new
+            {
+                l.Id,
+                l.ChapterId,
+                l.Title,
+                l.OrderIndex,
+                l.EstimatedMinutes
+            })
+            .ToListAsync();
+        return Ok(new { data = lessons });
+    }
+
     [HttpGet("{id}/questions")]
     public async Task<ActionResult> GetQuestions(long id)
     {

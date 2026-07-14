@@ -15,18 +15,18 @@ class Chapter {
 
   factory Chapter.fromJson(Map<String, dynamic> json) => Chapter(
         id: json['id'] as int,
-        bookId: json['book_id'] as int,
+        bookId: json['bookId'] as int? ?? json['book_id'] as int,
         title: json['title'] as String,
         description: json['description'] as String?,
-        orderIndex: json['order_index'] as int,
+        orderIndex: json['orderIndex'] as int? ?? json['order_index'] as int,
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'book_id': bookId,
+        'bookId': bookId,
         'title': title,
         'description': description,
-        'order_index': orderIndex,
+        'orderIndex': orderIndex,
       };
 
   Chapter copyWith({

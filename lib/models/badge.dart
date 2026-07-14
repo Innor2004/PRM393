@@ -18,15 +18,15 @@ class Badge {
         id: json['id'] as int,
         name: json['name'] as String,
         description: json['description'] as String?,
-        iconUrl: json['icon_url'] as String?,
-        requiredScore: json['required_score'] as int? ?? 0,
+        iconUrl: json['iconUrl'] as String? ?? json['icon_url'] as String?,
+        requiredScore: json['requiredScore'] as int? ?? json['required_score'] as int? ?? 0,
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
         'description': description,
-        'icon_url': iconUrl,
-        'required_score': requiredScore,
+        'iconUrl': iconUrl,
+        'requiredScore': requiredScore,
       };
 }

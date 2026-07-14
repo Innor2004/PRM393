@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme.dart';
+import '../../providers/theme_provider.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _obscurePassword = true;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
-  
+
   @override
   void initState() {
     super.initState();
@@ -53,126 +54,34 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  void _showServerSettings(BuildContext context) {
-    final auth = context.read<AuthProvider>();
-    final controller = TextEditingController(text: auth.backendUrl);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgDark,
-        title: const Text('Cấu hình Máy chủ API', style: TextStyle(color: AppColors.textMain)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Nhập địa chỉ URL của backend API (dùng 10.0.2.2 cho máy ảo Android hoặc IP máy tính của bạn cho thiết bị thật).',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              style: const TextStyle(color: AppColors.textMain),
-              decoration: const InputDecoration(
-                labelText: 'API Base URL',
-                hintText: 'http://10.0.2.2:5271/api',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy', style: TextStyle(color: AppColors.textMuted)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final newUrl = controller.text.trim();
-              if (newUrl.isNotEmpty) {
-                await auth.updateBackendUrl(newUrl);
-              }
-              if (context.mounted) Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Lưu & Kết nối', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConnectionStatus(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final isOnline = auth.useBackend;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isOnline 
-            ? AppColors.success.withValues(alpha: 0.15) 
-            : AppColors.warning.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isOnline 
-              ? AppColors.success.withValues(alpha: 0.3) 
-              : AppColors.warning.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isOnline ? Icons.cloud_done : Icons.cloud_off,
-            color: isOnline ? AppColors.success : AppColors.warning,
-            size: 18,
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              isOnline 
-                  ? 'Đã kết nối máy chủ SQL\n(${auth.backendUrl.replaceFirst('http://', '').replaceFirst('/api', '')})'
-                  : 'Ngoại tuyến - Dùng giả lập (Không lưu SQL)',
-              style: TextStyle(
-                color: isOnline ? AppColors.success : AppColors.warning,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: AppColors.textMuted),
-            onPressed: () => _showServerSettings(context),
+            icon: Icon(
+                context.watch<ThemeProvider>().isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => context.read<ThemeProvider>().toggleTheme(),
           ),
         ],
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.bgDarker, AppColors.bgDark],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        decoration: BoxDecoration(gradient: AppColors.gradientSurface),
         child: SafeArea(
           child: Center(
             child: FadeTransition(
               opacity: _fadeAnim,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
-                child: Form(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -209,8 +118,6 @@ class _LoginScreenState extends State<LoginScreen>
                           style: TextStyle(
                               fontSize: 15, color: AppColors.textMuted)),
                       const SizedBox(height: 16),
-                      _buildConnectionStatus(context),
-                      const SizedBox(height: 28),
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -218,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen>
                           labelText: 'Email',
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
-                        style: const TextStyle(color: AppColors.textMain),
+                        style: TextStyle(color: AppColors.textMain),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Vui lòng nhập email';
@@ -244,10 +151,10 @@ class _LoginScreenState extends State<LoginScreen>
                                 setState(() => _obscurePassword = !_obscurePassword),
                           ),
                         ),
-                        style: const TextStyle(color: AppColors.textMain),
+                        style: TextStyle(color: AppColors.textMain),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Vui lòng nhập mật khẩu';
+                            return 'Vui lòng nhập password';
                           }
                           if (value.length < 6) {
                             return 'Mật khẩu tối thiểu 6 ký tự';
@@ -268,8 +175,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   color: Colors.red.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                      color:
-                                          Colors.red.withValues(alpha: 0.3)),
+                                      color: Colors.red.withValues(alpha: 0.3)),
                                 ),
                                 child: Row(children: [
                                   const Icon(Icons.error_outline,
@@ -288,58 +194,11 @@ class _LoginScreenState extends State<LoginScreen>
                       Consumer<AuthProvider>(
                         builder: (context, auth, _) {
                           if (auth.isLoading) {
-                            return Container(
-                              width: double.infinity,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                gradient: AppColors.gradientPrimary,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primary.withValues(alpha: 0.4),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white),
-                                ),
-                              ),
-                            );
+                            return _buildLoadingButton();
                           }
-                          return Container(
-                            width: double.infinity,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(14),
-                              gradient: AppColors.gradientPrimary,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.4),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton(
-                              onPressed: _login,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14)),
-                              ),
-                              child: const Text('Đăng nhập',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white)),
-                            ),
+                          return _buildGradientButton(
+                            label: 'Đăng nhập',
+                            onPressed: _login,
                           );
                         },
                       ),
@@ -367,10 +226,66 @@ class _LoginScreenState extends State<LoginScreen>
                     ],
                   ),
                 ),
+                  ),
+                ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingButton() {
+    return Container(
+      width: double.infinity,
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: AppColors.gradientPrimary,
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      width: double.infinity,
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: AppColors.gradientPrimary,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
+        ),
+        child: Text(label,
+            style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white)),
       ),
     );
   }
