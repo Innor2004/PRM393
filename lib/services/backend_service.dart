@@ -15,7 +15,6 @@ class BackendService {
   BackendService._internal();
 
   static const String _baseUrlKey = 'backend_base_url';
-
   String _baseUrl = 'http://localhost:5271/api';
   String? _token;
   bool _isAvailable = false;
@@ -126,7 +125,6 @@ class BackendService {
       debugPrint(
         'Backend health error: Request timeout',
       );
-
       _isAvailable = false;
 
       return false;
@@ -693,9 +691,13 @@ class BackendService {
     }
 
     if (response.statusCode == 401) {
-      message =
-      'Phiên đăng nhập đã hết hạn. '
-          'Vui lòng đăng nhập lại.';
+      final requestPath = response.request?.url.path ?? '';
+      final isAuthEndpoint = requestPath.endsWith('/auth/login') || requestPath.endsWith('/auth/register');
+      if (!isAuthEndpoint) {
+        message =
+        'Phiên đăng nhập đã hết hạn. '
+            'Vui lòng đăng nhập lại.';
+      }
     }
 
     if (response.statusCode == 403) {

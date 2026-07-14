@@ -34,8 +34,13 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
 
   bool get isLoading => _isLoading;
-
+  String get backendUrl => _backend.baseUrl;
   bool get useBackend => _useBackend;
+
+  Future<void> updateBackendUrl(String url) async {
+    await _backend.setBaseUrl(url);
+    await tryAutoLogin();
+  }
 
   Future<void> tryAutoLogin() async {
     await _backend.init();
@@ -128,6 +133,9 @@ class AuthProvider extends ChangeNotifier {
       _useBackend =
       await _backend.checkHealth();
     }
+
+    await _backend.checkHealth();
+    _useBackend = _backend.isAvailable;
 
     if (_useBackend) {
       try {

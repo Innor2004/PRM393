@@ -13,6 +13,7 @@ class LessonDetailScreen extends StatefulWidget {
   State<LessonDetailScreen> createState() => _LessonDetailScreenState();
 }
 
+
 class _LessonDetailScreenState extends State<LessonDetailScreen> {
   bool _isSaved = false;
   bool _isLoadingSave = false;
@@ -182,10 +183,13 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   icon: const Icon(Icons.quiz_outlined),
                   label: const Text('Làm bài tập trắc nghiệm',
                       style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 15)),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),

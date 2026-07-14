@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _obscurePassword = true;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
-
+  
   @override
   void initState() {
     super.initState();
@@ -53,9 +53,111 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  void _showServerSettings(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+    final controller = TextEditingController(text: auth.backendUrl);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgDark,
+        title: const Text('Cấu hình Máy chủ API', style: TextStyle(color: AppColors.textMain)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Nhập địa chỉ URL của backend API (dùng 10.0.2.2 cho máy ảo Android hoặc IP máy tính của bạn cho thiết bị thật).',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              style: const TextStyle(color: AppColors.textMain),
+              decoration: const InputDecoration(
+                labelText: 'API Base URL',
+                hintText: 'http://10.0.2.2:5271/api',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy', style: TextStyle(color: AppColors.textMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newUrl = controller.text.trim();
+              if (newUrl.isNotEmpty) {
+                await auth.updateBackendUrl(newUrl);
+              }
+              if (context.mounted) Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Lưu & Kết nối', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConnectionStatus(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final isOnline = auth.useBackend;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isOnline 
+            ? AppColors.success.withValues(alpha: 0.15) 
+            : AppColors.warning.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isOnline 
+              ? AppColors.success.withValues(alpha: 0.3) 
+              : AppColors.warning.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isOnline ? Icons.cloud_done : Icons.cloud_off,
+            color: isOnline ? AppColors.success : AppColors.warning,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              isOnline 
+                  ? 'Đã kết nối máy chủ SQL\n(${auth.backendUrl.replaceFirst('http://', '').replaceFirst('/api', '')})'
+                  : 'Ngoại tuyến - Dùng giả lập (Không lưu SQL)',
+              style: TextStyle(
+                color: isOnline ? AppColors.success : AppColors.warning,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: AppColors.textMuted),
+            onPressed: () => _showServerSettings(context),
+          ),
+        ],
+      ),
+      extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -106,7 +208,9 @@ class _LoginScreenState extends State<LoginScreen>
                       Text('Đăng nhập để tiếp tục',
                           style: TextStyle(
                               fontSize: 15, color: AppColors.textMuted)),
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 16),
+                      _buildConnectionStatus(context),
+                      const SizedBox(height: 28),
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,

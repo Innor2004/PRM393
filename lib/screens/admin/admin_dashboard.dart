@@ -14,6 +14,7 @@ class AdminDashboard extends StatefulWidget {
   State<AdminDashboard> createState() => _AdminDashboardState();
 }
 
+
 class _AdminDashboardState extends State<AdminDashboard> {
   final _api = ApiService();
   int _selectedIndex = 0;
@@ -28,6 +29,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Admin Panel'),
         actions: [
           Padding(
