@@ -15,7 +15,7 @@ public class Badge
     [MaxLength(500)]
     public string? IconUrl { get; set; }
 
-    public int RequiredScore { get; set; } = 0;
+    public int RequiredAvgScore { get; set; } = 0;
 
     public ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
 }

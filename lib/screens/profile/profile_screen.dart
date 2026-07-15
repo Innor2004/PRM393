@@ -16,7 +16,7 @@ class ProfileScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
     final progress = context.watch<ProgressProvider>();
-    final badges = progress.earnedBadges;
+    final badges = progress.userBadges;
 
     return Container(
       decoration: BoxDecoration(gradient: AppColors.gradientSurface),

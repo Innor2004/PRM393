@@ -8,21 +8,14 @@ class ProgressProvider extends ChangeNotifier {
 
   int _userId = 1;
   List<Progress> _progressList = [];
-
-  void setUserId(int id) => _userId = id;
-  final List<Badge> _badges = [
-    Badge(id: 1, name: 'Nhà vật lý', description: 'Đạt điểm 10 Vật lý đại cương', iconUrl: '🏆', requiredScore: 100),
-    Badge(id: 2, name: 'Học sinh chăm chỉ', description: 'Hoàn thành 5 bài học', iconUrl: '⭐', requiredScore: 50),
-    Badge(id: 3, name: 'Nhà thám hiểm', description: 'Hoàn thành tất cả chương', iconUrl: '🌟', requiredScore: 200),
-  ];
-  final List<int> _earnedBadgeIds = [];
+  List<Badge> _userBadges = [];
   double _overallPercent = 0;
   int _totalLessons = 0;
 
+  void setUserId(int id) => _userId = id;
+
   List<Progress> get progressList => _progressList;
-  List<Badge> get badges => _badges;
-  List<int> get earnedBadgeIds => _earnedBadgeIds;
-  List<Badge> get earnedBadges => _badges.where((b) => _earnedBadgeIds.contains(b.id)).toList();
+  List<Badge> get userBadges => _userBadges;
   double get overallPercent => _overallPercent;
   int get totalLessons => _totalLessons;
 
@@ -34,7 +27,8 @@ class ProgressProvider extends ChangeNotifier {
       final summary = res['summary'] as Map<String, dynamic>? ?? {};
       _overallPercent = (summary['overallPercent'] as num?)?.toDouble() ?? 0;
       _totalLessons = (summary['totalLessons'] as num?)?.toInt() ?? 0;
-      _calculateBadges();
+      final badgesJson = res['badges'] as List<dynamic>? ?? [];
+      _userBadges = badgesJson.map((e) => Badge.fromJson(Map<String, dynamic>.from(e))).toList();
       notifyListeners();
     } catch (e) {
       debugPrint('loadProgress error: $e');
@@ -51,7 +45,6 @@ class ProgressProvider extends ChangeNotifier {
       quizScore: score,
       completionPercent: score >= 5 ? 100 : score * 10,
     ));
-    _calculateBadges();
     _calculateOverall();
     notifyListeners();
   }
@@ -67,18 +60,6 @@ class ProgressProvider extends ChangeNotifier {
         .toSet()
         .length;
     _overallPercent = (completed / _totalLessons * 100).clamp(0, 100);
-  }
-
-  void _calculateBadges() {
-    final totalScore = _progressList.fold<double>(0, (sum, p) => sum + p.quizScore);
-    for (final badge in _badges) {
-      if (!_earnedBadgeIds.contains(badge.id) && totalScore >= badge.requiredScore) {
-        _earnedBadgeIds.add(badge.id);
-      }
-    }
-    if (_progressList.length >= 5 && !_earnedBadgeIds.contains(2)) {
-      _earnedBadgeIds.add(2);
-    }
   }
 
   bool isLessonCompleted(int lessonId) =>

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using XIBookAPI.Data;
 using XIBookAPI.Models;
 using XIBookAPI.Models.DTOs;
+using XIBookAPI.Services;
 
 namespace XIBookAPI.Controllers;
 
@@ -14,8 +15,13 @@ namespace XIBookAPI.Controllers;
 public class QuizController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly BadgeService _badgeService;
 
-    public QuizController(AppDbContext db) => _db = db;
+    public QuizController(AppDbContext db, BadgeService badgeService)
+    {
+        _db = db;
+        _badgeService = badgeService;
+    }
 
     [HttpPost("submit")]
     public async Task<ActionResult<QuizResultResponse>> Submit(QuizSubmitRequest request)
@@ -59,6 +65,8 @@ public class QuizController : ControllerBase
         progress.CompletionPercent = (decimal)(score >= 5 ? 100 : score * 10);
         progress.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+
+        await _badgeService.CheckAndAwardBadges(userId);
 
         return Ok(new QuizResultResponse(
             score, correctCount, questions.Count, details
