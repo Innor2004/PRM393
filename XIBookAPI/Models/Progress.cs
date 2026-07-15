@@ -13,7 +13,7 @@ public class Progress
     public bool IsCompleted { get; set; } = false;
 
     [Column(TypeName = "decimal(5,2)")]
-    public decimal QuizScore { get; set; } = 0;
+    public decimal? QuizScore { get; set; }
 
     [Column(TypeName = "decimal(5,2)")]
     public decimal CompletionPercent { get; set; } = 0;

@@ -35,7 +35,17 @@ class ProgressProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> markLessonCompleted(int lessonId, {double score = 0}) async {
+  Future<void> markLessonCompleted(int lessonId, {double? score}) async {
+    if (score == null) {
+      try {
+        await _backend.post('/progress/complete-lesson/$lessonId');
+        await loadProgress();
+        return;
+      } catch (e) {
+        debugPrint('sync complete-lesson error: $e');
+      }
+    }
+
     _progressList.removeWhere((p) => p.lessonId == lessonId);
     _progressList.add(Progress(
       id: DateTime.now().millisecondsSinceEpoch,
@@ -43,7 +53,9 @@ class ProgressProvider extends ChangeNotifier {
       lessonId: lessonId,
       isCompleted: true,
       quizScore: score,
-      completionPercent: score >= 5 ? 100 : score * 10,
+      completionPercent: score != null
+          ? (score >= 5 ? 100 : score * 10)
+          : 100,
     ));
     _calculateOverall();
     notifyListeners();
@@ -68,6 +80,12 @@ class ProgressProvider extends ChangeNotifier {
   double getLessonScore(int lessonId) {
     final found = _progressList.where((p) => p.lessonId == lessonId).toList();
     if (found.isEmpty) return 0;
-    return found.first.quizScore;
+    return found.first.quizScore ?? 0;
+  }
+
+  bool hasLessonQuiz(int lessonId) {
+    final found = _progressList.where((p) => p.lessonId == lessonId).toList();
+    if (found.isEmpty) return false;
+    return found.first.hasQuiz;
   }
 }

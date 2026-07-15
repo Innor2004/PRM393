@@ -73,9 +73,9 @@ public static class DbInitializer
         if (!db.Badges.Any())
         {
             db.Badges.AddRange(
-                new Badge { Name = "Nhà vật lý", Description = "Hoàn thành tất cả bài học với điểm trung bình từ 9.0 trở lên", IconUrl = "🏆", RequiredAvgScore = 90 },
-                new Badge { Name = "Học sinh chăm chỉ", Description = "Hoàn thành tất cả bài học với điểm trung bình từ 7.0 trở lên", IconUrl = "⭐", RequiredAvgScore = 70 },
-                new Badge { Name = "Nhà thám hiểm", Description = "Hoàn thành tất cả bài học với điểm trung bình từ 5.0 trở lên", IconUrl = "🌟", RequiredAvgScore = 50 }
+                new Badge { Name = "Nhà thám hiểm", Description = "Hoàn thành tất cả bài học với điểm trung bình từ 10.0 trở lên", IconUrl = "🏆", RequiredScore = 100 },
+                new Badge { Name = "Nhà vật lý", Description = "Hoàn thành tất cả bài học với điểm trung bình từ 7.0 trở lên", IconUrl = "🌟", RequiredScore = 70 },
+                new Badge { Name = "Học sinh chăm chỉ", Description = "Hoàn thành tất cả bài học", IconUrl = "⭐", RequiredScore = 0 }
             );
             db.SaveChanges();
         }

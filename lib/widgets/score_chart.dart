@@ -12,7 +12,7 @@ class ScoreChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scores = progressList
-        .where((p) => p.quizScore > 0)
+        .where((p) => p.quizScore != null && p.quizScore! > 0)
         .toList()
       ..sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
 
@@ -37,7 +37,7 @@ class ScoreChart extends StatelessWidget {
 
     final maxY = 10.0;
     final spots = scores.asMap().entries.map((e) {
-      return FlSpot(e.key.toDouble(), e.value.quizScore);
+      return FlSpot(e.key.toDouble(), e.value.quizScore!);
     }).toList();
 
     return Container(

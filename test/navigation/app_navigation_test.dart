@@ -40,6 +40,11 @@ class TestNavigatorObserver extends NavigatorObserver {
   }
 }
 
+class FakeQuizForNav extends QuizProvider {
+  @override
+  Future<bool> hasQuestions(int lessonId) async => true;
+}
+
 class FakeAuthForNav extends AuthProvider {
   User? _fakeUser;
 
@@ -117,16 +122,23 @@ void main() {
       final lesson = Lesson(id: 1, chapterId: 1, title: 'Bài 1', orderIndex: 1);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: LessonDetailScreen(lesson: lesson),
-          navigatorObservers: [observer],
-          routes: {
-            '/quiz': (context) => const Scaffold(
-                  body: Center(child: Text('Màn hình Quiz')),
-                ),
-          },
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<QuizProvider>(create: (_) => FakeQuizForNav()),
+            ChangeNotifierProvider<ProgressProvider>(create: (_) => ProgressProvider()),
+          ],
+          child: MaterialApp(
+            home: LessonDetailScreen(lesson: lesson),
+            navigatorObservers: [observer],
+            routes: {
+              '/quiz': (context) => const Scaffold(
+                    body: Center(child: Text('Màn hình Quiz')),
+                  ),
+            },
+          ),
         ),
       );
+      await tester.pump();
       await tester.pump();
 
       await tester.scrollUntilVisible(find.text('Làm bài tập trắc nghiệm'), 100);
@@ -144,16 +156,23 @@ void main() {
       final lesson = Lesson(id: 1, chapterId: 1, title: 'Bài 1', orderIndex: 1);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: LessonDetailScreen(lesson: lesson),
-          navigatorObservers: [observer],
-          routes: {
-            '/quiz': (context) => const Scaffold(
-                  body: Center(child: Text('Quiz Screen')),
-                ),
-          },
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<QuizProvider>(create: (_) => FakeQuizForNav()),
+            ChangeNotifierProvider<ProgressProvider>(create: (_) => ProgressProvider()),
+          ],
+          child: MaterialApp(
+            home: LessonDetailScreen(lesson: lesson),
+            navigatorObservers: [observer],
+            routes: {
+              '/quiz': (context) => const Scaffold(
+                    body: Center(child: Text('Quiz Screen')),
+                  ),
+            },
+          ),
         ),
       );
+      await tester.pump();
       await tester.pump();
 
       await tester.tap(find.byTooltip('Làm bài tập'));

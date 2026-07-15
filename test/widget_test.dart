@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:project/models/lesson.dart';
+import 'package:project/providers/quiz_provider.dart';
+import 'package:project/providers/progress_provider.dart';
 import 'package:project/screens/lesson/lesson_detail_screen.dart';
 import 'package:project/theme.dart';
 
@@ -12,7 +15,13 @@ void main() {
         contentBody: '# Bài 1\nNội dung bài học');
 
     await tester.pumpWidget(
-      MaterialApp(home: LessonDetailScreen(lesson: lesson)),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<QuizProvider>(create: (_) => QuizProvider()),
+          ChangeNotifierProvider<ProgressProvider>(create: (_) => ProgressProvider()),
+        ],
+        child: MaterialApp(home: LessonDetailScreen(lesson: lesson)),
+      ),
     );
     await tester.pump();
 

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/lesson.dart';
+import '../../providers/quiz_provider.dart';
+import '../../providers/progress_provider.dart';
 import '../../theme.dart';
 import '../../widgets/interactive_lab.dart';
 import '../../widgets/latex_renderer.dart';
@@ -13,6 +16,18 @@ class LessonDetailScreen extends StatefulWidget {
 }
 
 class _LessonDetailScreenState extends State<LessonDetailScreen> {
+  bool? _hasQuestions;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkQuestions();
+  }
+
+  Future<void> _checkQuestions() async {
+    final hasQ = await context.read<QuizProvider>().hasQuestions(widget.lesson.id);
+    if (mounted) setState(() => _hasQuestions = hasQ);
+  }
 
   FormulaType? _getLabType() {
     switch (widget.lesson.id) {
@@ -38,12 +53,19 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         appBar: AppBar(
           title: Text(widget.lesson.title),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.quiz_outlined),
-              tooltip: 'Làm bài tập',
-              onPressed: () => Navigator.of(context)
-                  .pushNamed('/quiz', arguments: widget.lesson),
-            ),
+            if (_hasQuestions == true)
+              IconButton(
+                icon: const Icon(Icons.quiz_outlined),
+                tooltip: 'Làm bài tập',
+                onPressed: () => Navigator.of(context)
+                    .pushNamed('/quiz', arguments: widget.lesson),
+              ),
+            if (_hasQuestions == false)
+              IconButton(
+                icon: const Icon(Icons.check_circle_outline),
+                tooltip: 'Hoàn thành',
+                onPressed: () => _completeLesson(),
+              ),
           ],
         ),
         body: SingleChildScrollView(
@@ -115,26 +137,34 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   Widget _buildQuizButton() {
+    if (_hasQuestions == null) return const SizedBox.shrink();
+
+    final isComplete = _hasQuestions == false;
     return Container(
       width: double.infinity,
       height: 48,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        gradient: AppColors.gradientPrimary,
+        gradient: isComplete
+            ? LinearGradient(colors: [AppColors.success, AppColors.success.withValues(alpha: 0.8)])
+            : AppColors.gradientPrimary,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.4),
+            color: (isComplete ? AppColors.success : AppColors.primary)
+                .withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
       ),
       child: ElevatedButton.icon(
-        onPressed: () => Navigator.of(context)
-            .pushNamed('/quiz', arguments: widget.lesson),
-        icon: const Icon(Icons.quiz_outlined, size: 20),
-        label: const Text('Làm bài tập trắc nghiệm',
-            style: TextStyle(
+        onPressed: isComplete
+            ? _completeLesson
+            : () => Navigator.of(context)
+                .pushNamed('/quiz', arguments: widget.lesson),
+        icon: Icon(isComplete ? Icons.check_circle_outline : Icons.quiz_outlined, size: 20),
+        label: Text(isComplete ? 'Hoàn thành bài học' : 'Làm bài tập trắc nghiệm',
+            style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
                 color: Colors.white)),
@@ -147,6 +177,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _completeLesson() async {
+    await context.read<ProgressProvider>().markLessonCompleted(widget.lesson.id);
+    if (mounted) Navigator.of(context).pop();
   }
 
   Widget _buildContent(BuildContext context, String content) {
