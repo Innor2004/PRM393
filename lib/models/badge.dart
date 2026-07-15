@@ -3,30 +3,23 @@ class Badge {
   final String name;
   final String? description;
   final String? iconUrl;
-  final int requiredScore;
+  final DateTime? earnedAt;
 
   Badge({
     required this.id,
     required this.name,
     this.description,
     this.iconUrl,
-    this.requiredScore = 0,
+    this.earnedAt,
   });
-
 
   factory Badge.fromJson(Map<String, dynamic> json) => Badge(
         id: json['id'] as int,
         name: json['name'] as String,
         description: json['description'] as String?,
-        iconUrl: json['icon_url'] as String?,
-        requiredScore: json['required_score'] as int? ?? 0,
+        iconUrl: json['iconUrl'] as String? ?? json['icon_url'] as String?,
+        earnedAt: json['earnedAt'] != null
+            ? DateTime.parse(json['earnedAt'] as String)
+            : null,
       );
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'icon_url': iconUrl,
-        'required_score': requiredScore,
-      };
 }

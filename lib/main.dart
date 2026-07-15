@@ -4,6 +4,7 @@ import 'providers/auth_provider.dart';
 import 'providers/lesson_provider.dart';
 import 'providers/progress_provider.dart';
 import 'providers/quiz_provider.dart';
+import 'providers/theme_provider.dart';
 import 'theme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -28,43 +29,68 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LessonProvider()),
         ChangeNotifierProvider(create: (_) => ProgressProvider()),
         ChangeNotifierProvider(create: (_) => QuizProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        title: 'X-IBook',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        initialRoute: '/splash',
-        onGenerateRoute: (settings) {
-          switch (settings.name) {
-            case '/splash':
-              return MaterialPageRoute(builder: (_) => const SplashScreen());
-            case '/login':
-              return MaterialPageRoute(builder: (_) => const LoginScreen());
-            case '/home':
-              return MaterialPageRoute(builder: (_) => const HomeScreen());
-            case '/chapter-lessons':
-              final chapter = settings.arguments as dynamic;
-              return MaterialPageRoute(
-                builder: (_) => ChapterLessonsScreen(chapter: chapter),
-              );
-            case '/lesson-detail':
-              final lesson = settings.arguments as dynamic;
-              return MaterialPageRoute(
-                builder: (_) => LessonDetailScreen(lesson: lesson),
-              );
-            case '/quiz':
-              final lesson = settings.arguments as dynamic;
-              return MaterialPageRoute(
-                builder: (_) => QuizScreen(lesson: lesson),
-              );
-            case '/admin':
-              return MaterialPageRoute(builder: (_) => const AdminDashboard());
-            default:
-              return MaterialPageRoute(builder: (_) => const SplashScreen());
-          }
+      child: Consumer<ThemeProvider>(
+        builder: (context, tp, _) {
+          return MaterialApp(
+            key: ValueKey(tp.themeMode),
+            title: 'X-IBook',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: tp.themeMode,
+            initialRoute: '/splash',
+            onGenerateRoute: (settings) {
+              switch (settings.name) {
+                case '/splash':
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => const SplashScreen(),
+                  );
+                case '/login':
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => const LoginScreen(),
+                  );
+                case '/home':
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => const HomeScreen(),
+                  );
+                case '/chapter-lessons':
+                  final chapter = settings.arguments as dynamic;
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => ChapterLessonsScreen(chapter: chapter),
+                  );
+                case '/lesson-detail':
+                  final lesson = settings.arguments as dynamic;
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => LessonDetailScreen(lesson: lesson),
+                  );
+                case '/quiz':
+                  final lesson = settings.arguments as dynamic;
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => QuizScreen(lesson: lesson),
+                  );
+                case '/admin':
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => const AdminDashboard(),
+                  );
+                default:
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => const SplashScreen(),
+                  );
+              }
+            },
+          );
         },
       ),
     );
-
   }
 }

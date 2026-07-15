@@ -62,6 +62,113 @@ public class AdminController : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("chapters/{id}")]
+    public async Task<ActionResult> UpdateChapter(long id, Chapter updated)
+    {
+        var chapter = await _db.Chapters.FindAsync(id);
+        if (chapter == null) return NotFound();
+
+        chapter.Title = updated.Title;
+        chapter.Description = updated.Description;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { data = chapter });
+    }
+
+    [HttpDelete("chapters/{id}")]
+    public async Task<ActionResult> DeleteChapter(long id)
+    {
+        var chapter = await _db.Chapters.FindAsync(id);
+        if (chapter == null) return NotFound();
+
+        var lessons = await _db.Lessons.Where(l => l.ChapterId == id).ToListAsync();
+        foreach (var lesson in lessons)
+        {
+            var questions = await _db.Questions.Where(q => q.LessonId == lesson.Id).ToListAsync();
+            _db.Questions.RemoveRange(questions);
+        }
+        _db.Lessons.RemoveRange(lessons);
+        _db.Chapters.Remove(chapter);
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpPost("lessons")]
+    public async Task<ActionResult> CreateLesson(Lesson lesson)
+    {
+        _db.Lessons.Add(lesson);
+        await _db.SaveChangesAsync();
+        return Ok(new { data = lesson });
+    }
+
+    [HttpPost("questions")]
+    public async Task<ActionResult> CreateQuestion(Question question)
+    {
+        _db.Questions.Add(question);
+        await _db.SaveChangesAsync();
+        return Ok(new { data = question });
+    }
+
+    [HttpPut("questions/{id}")]
+    public async Task<ActionResult> UpdateQuestion(long id, Question updated)
+    {
+        var question = await _db.Questions.FindAsync(id);
+        if (question == null) return NotFound();
+
+        question.QuestionText = updated.QuestionText;
+        question.OptionA = updated.OptionA;
+        question.OptionB = updated.OptionB;
+        question.OptionC = updated.OptionC;
+        question.OptionD = updated.OptionD;
+        question.CorrectOption = updated.CorrectOption;
+        question.Explanation = updated.Explanation;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { data = question });
+    }
+
+    [HttpDelete("questions/{id}")]
+    public async Task<ActionResult> DeleteQuestion(long id)
+    {
+        var question = await _db.Questions.FindAsync(id);
+        if (question == null) return NotFound();
+
+        _db.Questions.Remove(question);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpGet("stats/user-growth")]
+    public async Task<ActionResult> GetUserGrowth()
+    {
+        var days = await _db.Users
+            .GroupBy(u => u.CreatedAt.Date)
+            .Select(g => new { date = g.Key, count = g.Count() })
+            .OrderBy(x => x.date)
+            .ToListAsync();
+
+        return Ok(new { data = days });
+    }
+
+    [HttpGet("stats/lesson-scores")]
+    public async Task<ActionResult> GetLessonScores()
+    {
+        var scores = await _db.Progresses
+            .Where(p => p.QuizScore > 0)
+            .GroupBy(p => p.LessonId)
+            .Select(g => new
+            {
+                lessonId = g.Key,
+                averageScore = Math.Round(g.Average(p => (double?)p.QuizScore) ?? 0, 1),
+                attemptCount = g.Count()
+            })
+            .OrderByDescending(x => x.averageScore)
+            .ToListAsync();
+
+        return Ok(new { data = scores });
+    }
+
     [HttpGet("stats")]
     public async Task<ActionResult> GetStats()
     {
