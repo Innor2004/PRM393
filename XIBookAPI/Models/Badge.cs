@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace XIBookAPI.Models;
+namespace PhysicsBook.Models;
 
 public class Badge
 {
@@ -19,3 +19,4 @@ public class Badge
 
     public ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
 }
+

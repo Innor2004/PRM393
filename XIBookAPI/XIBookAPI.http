@@ -1,6 +1,6 @@
-@XIBookAPI_HostAddress = http://localhost:5271
+@PhysicsBook_HostAddress = http://localhost:5271
 
-GET {{XIBookAPI_HostAddress}}/weatherforecast/
+GET {{PhysicsBook_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###

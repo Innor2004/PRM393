@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using XIBookAPI.Data;
+using PhysicsBook.Data;
 
-namespace XIBookAPI.Controllers;
+namespace PhysicsBook.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -65,3 +65,4 @@ public class LessonsController : ControllerBase
         return Ok(new { data = questions });
     }
 }
+

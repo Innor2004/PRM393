@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using XIBookAPI.Data;
-using XIBookAPI.Models;
+using PhysicsBook.Data;
+using PhysicsBook.Models;
 
-namespace XIBookAPI.Services;
+namespace PhysicsBook.Services;
 
 public class BadgeService
 {
@@ -102,3 +102,4 @@ public class BadgeService
         await _db.SaveChangesAsync();
     }
 }
+

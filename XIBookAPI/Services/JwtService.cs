@@ -2,9 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using XIBookAPI.Models;
+using PhysicsBook.Models;
 
-namespace XIBookAPI.Services;
+namespace PhysicsBook.Services;
 
 public class JwtService
 {
@@ -18,7 +18,7 @@ public class JwtService
     public string GenerateToken(User user)
     {
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? "X-IBook Secret Key Default 2026 At Least 32 Characters!"));
+            Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? "PhysicsBook Secret Key Default 2026 At Least 32 Characters!"));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -30,8 +30,8 @@ public class JwtService
         };
 
         var token = new JwtSecurityToken(
-            issuer: _config["Jwt:Issuer"] ?? "XIBookAPI",
-            audience: _config["Jwt:Audience"] ?? "XIBookApp",
+            issuer: _config["Jwt:Issuer"] ?? "PhysicsBook",
+            audience: _config["Jwt:Audience"] ?? "PhysicsBookApp",
             claims: claims,
             expires: DateTime.UtcNow.AddDays(7),
             signingCredentials: creds
@@ -40,3 +40,4 @@ public class JwtService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
+

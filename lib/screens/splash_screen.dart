@@ -86,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ShaderMask(
                     shaderCallback: (bounds) =>
                         AppColors.gradientAccent.createShader(bounds),
-                    child: const Text('X-IBook',
+                    child: const Text('PhysicsBook',
                         style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.w900,

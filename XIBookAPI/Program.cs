@@ -2,8 +2,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using XIBookAPI.Data;
-using XIBookAPI.Services;
+using PhysicsBook.Data;
+using PhysicsBook.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,10 +25,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "XIBookAPI",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "XIBookApp",
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "PhysicsBook",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "PhysicsBookApp",
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "X-IBook Secret Key Default 2026 At Least 32 Characters!")),
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "PhysicsBook Secret Key Default 2026 At Least 32 Characters!")),
         };
     });
 
@@ -61,7 +61,8 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    XIBookAPI.Data.DbInitializer.Initialize(db);
+    PhysicsBook.Data.DbInitializer.Initialize(db);
 }
 
 app.Run();
+

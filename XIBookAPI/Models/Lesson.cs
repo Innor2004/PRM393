@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace XIBookAPI.Models;
+namespace PhysicsBook.Models;
 
 public class Lesson
 {
@@ -24,3 +24,4 @@ public class Lesson
     public ICollection<Question> Questions { get; set; } = new List<Question>();
     public ICollection<Progress> Progresses { get; set; } = new List<Progress>();
 }
+
