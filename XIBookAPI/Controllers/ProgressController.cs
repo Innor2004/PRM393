@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using XIBookAPI.Data;
+using XIBookAPI.Models;
+using XIBookAPI.Services;
 
 namespace XIBookAPI.Controllers;
 
@@ -12,13 +14,20 @@ namespace XIBookAPI.Controllers;
 public class ProgressController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly BadgeService _badgeService;
 
-    public ProgressController(AppDbContext db) => _db = db;
+    public ProgressController(AppDbContext db, BadgeService badgeService)
+    {
+        _db = db;
+        _badgeService = badgeService;
+    }
 
     [HttpGet("me")]
     public async Task<ActionResult> GetMyProgress()
     {
         var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        await _badgeService.CheckAndAwardBadges(userId);
 
         var progress = await _db.Progresses
             .Where(p => p.UserId == userId)
@@ -59,5 +68,34 @@ public class ProgressController : ControllerBase
             },
             badges
         });
+    }
+
+    [HttpPost("complete-lesson/{lessonId}")]
+    public async Task<ActionResult> CompleteLesson(long lessonId)
+    {
+        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var lessonExists = await _db.Lessons.AnyAsync(l => l.Id == lessonId);
+        if (!lessonExists)
+            return NotFound(new { message = "Không tìm thấy bài học" });
+
+        var progress = await _db.Progresses
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.LessonId == lessonId);
+
+        if (progress == null)
+        {
+            progress = new Progress { UserId = userId, LessonId = lessonId };
+            _db.Progresses.Add(progress);
+        }
+
+        progress.IsCompleted = true;
+        progress.QuizScore = null;
+        progress.CompletionPercent = 100;
+        progress.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        await _badgeService.CheckAndAwardBadges(userId);
+
+        return Ok(new { message = "Đã hoàn thành bài học" });
     }
 }

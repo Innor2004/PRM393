@@ -166,50 +166,53 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWide = constraints.maxWidth >= 600;
-                        if (isWide) {
-                          return IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: _buildProgressCard(progress, isWide: true),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: ScoreChart(progressList: progress.progressList, lessonTooltips: lessonTooltips),
-                                ),
-                              ],
-                            ),
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isWide = constraints.maxWidth >= 600;
+                          if (isWide) {
+                            return IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: _buildProgressCard(progress, isWide: true),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: ScoreChart(progressList: progress.progressList, lessonTooltips: lessonTooltips),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                          return Column(
+                            children: [
+                              _buildProgressCard(progress, isWide: false),
+                              const SizedBox(height: 16),
+                              ScoreChart(progressList: progress.progressList, lessonTooltips: lessonTooltips),
+                            ],
                           );
-                        }
-                        return Column(
-                          children: [
-                            _buildProgressCard(progress, isWide: false),
-                            const SizedBox(height: 16),
-                            ScoreChart(progressList: progress.progressList, lessonTooltips: lessonTooltips),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    _chapterHeader(lessonProv),
-                    const SizedBox(height: 12),
-                  ],
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      _chapterHeader(lessonProv),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
                 ),
               ),
             ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: (MediaQuery.of(context).size.width >= 600
+              sliver: (MediaQuery.of(context).size.width >= 1500
                   ? SliverGrid(
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
+                        crossAxisCount: 3,
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
                         childAspectRatio: 3.5,
@@ -222,14 +225,30 @@ class _HomeScreenState extends State<HomeScreen> {
                         childCount: lessonProv.chapters.length,
                       ),
                     )
-                  : SliverList.separated(
-                      itemBuilder: (context, index) {
-                        final ch = lessonProv.chapters[index];
-                        return _buildChapterCard(ch, lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList()));
-                      },
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemCount: lessonProv.chapters.length,
-                    )),
+                  : MediaQuery.of(context).size.width >= 880
+                      ? SliverGrid(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 3.5,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final ch = lessonProv.chapters[index];
+                              return _buildChapterCard(ch, lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList()));
+                            },
+                            childCount: lessonProv.chapters.length,
+                          ),
+                        )
+                      : SliverList.separated(
+                          itemBuilder: (context, index) {
+                            final ch = lessonProv.chapters[index];
+                            return _buildChapterCard(ch, lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList()));
+                          },
+                          separatorBuilder: (_, _) => const SizedBox(height: 12),
+                          itemCount: lessonProv.chapters.length,
+                        )),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
           ],

@@ -25,7 +25,7 @@ public class BadgesController : ControllerBase
                 b.Name,
                 b.Description,
                 b.IconUrl,
-                b.RequiredAvgScore
+                b.RequiredScore
             })
             .ToListAsync();
 

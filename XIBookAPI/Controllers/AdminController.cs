@@ -160,7 +160,7 @@ public class AdminController : ControllerBase
             .Select(g => new
             {
                 lessonId = g.Key,
-                averageScore = Math.Round(g.Average(p => (double)p.QuizScore), 1),
+                averageScore = Math.Round(g.Average(p => (double?)p.QuizScore) ?? 0, 1),
                 attemptCount = g.Count()
             })
             .OrderByDescending(x => x.averageScore)

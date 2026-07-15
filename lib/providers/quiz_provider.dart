@@ -101,6 +101,15 @@ class QuizProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> hasQuestions(int lessonId) async {
+    try {
+      final data = await _backend.getList('/lessons/$lessonId/questions');
+      return data.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   void reset() {
     _reset();
     notifyListeners();

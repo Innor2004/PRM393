@@ -49,16 +49,17 @@ class _ChapterLessonsScreenState extends State<ChapterLessonsScreen> {
                 itemBuilder: (context, index) {
                   final lesson = lessons[index];
                   final completed = progressProv.isLessonCompleted(lesson.id);
+                  final hasQuiz = completed ? progressProv.hasLessonQuiz(lesson.id) : true;
                   final score = progressProv.getLessonScore(lesson.id);
 
-                  return _buildLessonCard(lesson, completed, score);
+                  return _buildLessonCard(lesson, completed, score, hasQuiz: hasQuiz);
                 },
               ),
       ),
     );
   }
 
-  Widget _buildLessonCard(dynamic lesson, bool completed, double score) {
+  Widget _buildLessonCard(dynamic lesson, bool completed, double score, {bool hasQuiz = true}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -124,7 +125,7 @@ class _ChapterLessonsScreenState extends State<ChapterLessonsScreen> {
                           Text('${lesson.estimatedMinutes} phút',
                               style: TextStyle(
                                   color: AppColors.textMuted, fontSize: 12)),
-                          if (completed) ...[
+                          if (completed && hasQuiz) ...[
                             const SizedBox(width: 12),
                             Icon(Icons.star,
                                 size: 14, color: AppColors.warning),

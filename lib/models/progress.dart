@@ -3,7 +3,7 @@ class Progress {
   final int userId;
   final int lessonId;
   final bool isCompleted;
-  final double quizScore;
+  final double? quizScore;
   final double completionPercent;
   final DateTime updatedAt;
 
@@ -12,7 +12,7 @@ class Progress {
     required this.userId,
     required this.lessonId,
     this.isCompleted = false,
-    this.quizScore = 0,
+    this.quizScore,
     this.completionPercent = 0,
     DateTime? updatedAt,
   }) : updatedAt = updatedAt ?? DateTime.now();
@@ -22,7 +22,7 @@ class Progress {
         userId: json['userId'] as int? ?? json['user_id'] as int? ?? 1,
         lessonId: json['lessonId'] as int? ?? json['lesson_id'] as int,
         isCompleted: json['isCompleted'] as bool? ?? json['is_completed'] as bool? ?? false,
-        quizScore: (json['quizScore'] as num?)?.toDouble() ?? (json['quiz_score'] as num?)?.toDouble() ?? 0,
+        quizScore: (json['quizScore'] as num?)?.toDouble() ?? (json['quiz_score'] as num?)?.toDouble(),
         completionPercent:
             (json['completionPercent'] as num?)?.toDouble() ?? (json['completion_percent'] as num?)?.toDouble() ?? 0,
         updatedAt: json['updatedAt'] != null
@@ -60,4 +60,6 @@ class Progress {
         completionPercent: completionPercent ?? this.completionPercent,
         updatedAt: updatedAt ?? this.updatedAt,
       );
+
+  bool get hasQuiz => quizScore != null;
 }
