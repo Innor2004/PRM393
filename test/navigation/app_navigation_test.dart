@@ -107,7 +107,7 @@ void main() {
       await tester.pumpWidget(buildSplashApp());
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('X-IBook'), findsOneWidget);
+      expect(find.text('PhysicsBook'), findsOneWidget);
 
       await tester.pump(const Duration(seconds: 2));
       await tester.pump(const Duration(seconds: 2));

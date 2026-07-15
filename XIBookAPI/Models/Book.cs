@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace XIBookAPI.Models;
+namespace PhysicsBook.Models;
 
 public class Book
 {
@@ -18,3 +18,4 @@ public class Book
 
     public ICollection<Chapter> Chapters { get; set; } = new List<Chapter>();
 }
+

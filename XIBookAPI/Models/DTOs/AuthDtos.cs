@@ -1,4 +1,4 @@
-namespace XIBookAPI.Models.DTOs;
+namespace PhysicsBook.Models.DTOs;
 
 public record RegisterRequest(
     string Name,

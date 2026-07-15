@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace XIBookAPI.Models;
+namespace PhysicsBook.Models;
 
 public class Question
 {
@@ -32,3 +32,4 @@ public class Question
     [ForeignKey(nameof(LessonId))]
     public Lesson? Lesson { get; set; }
 }
+

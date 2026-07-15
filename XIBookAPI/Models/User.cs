@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace XIBookAPI.Models;
+namespace PhysicsBook.Models;
 
 public class User
 {

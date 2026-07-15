@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace XIBookAPI.Models;
+namespace PhysicsBook.Models;
 
 public class UserBadge
 {
@@ -18,3 +18,4 @@ public class UserBadge
     [ForeignKey(nameof(BadgeId))]
     public Badge? Badge { get; set; }
 }
+

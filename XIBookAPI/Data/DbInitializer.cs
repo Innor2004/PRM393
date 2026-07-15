@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using XIBookAPI.Models;
+using PhysicsBook.Models;
 
-namespace XIBookAPI.Data;
+namespace PhysicsBook.Data;
 
 public static class DbInitializer
 {
@@ -166,3 +166,4 @@ public static class DbInitializer
         }
     }
 }
+

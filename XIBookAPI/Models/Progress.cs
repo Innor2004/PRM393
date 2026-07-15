@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace XIBookAPI.Models;
+namespace PhysicsBook.Models;
 
 public class Progress
 {
@@ -26,3 +26,4 @@ public class Progress
     [ForeignKey(nameof(LessonId))]
     public Lesson? Lesson { get; set; }
 }
+

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using XIBookAPI.Models;
+using PhysicsBook.Models;
 
-namespace XIBookAPI.Data;
+namespace PhysicsBook.Data;
 
 public class AppDbContext : DbContext
 {
@@ -58,3 +58,4 @@ public class AppDbContext : DbContext
         });
     }
 }
+
