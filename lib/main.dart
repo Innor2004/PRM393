@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
         builder: (context, tp, _) {
           return MaterialApp(
             key: ValueKey(tp.themeMode),
-            title: 'X-IBook',
+            title: 'PhysicsBook',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,

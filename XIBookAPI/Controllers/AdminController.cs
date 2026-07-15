@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using XIBookAPI.Data;
-using XIBookAPI.Models;
+using PhysicsBook.Data;
+using PhysicsBook.Models;
 
-namespace XIBookAPI.Controllers;
+namespace PhysicsBook.Controllers;
 
 [ApiController]
 [Route("api/admin")]
@@ -186,3 +186,4 @@ public class AdminController : ControllerBase
         });
     }
 }
+

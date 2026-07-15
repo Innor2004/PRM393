@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace XIBookAPI.Controllers;
+namespace PhysicsBook.Controllers;
 
 [ApiController]
 [Route("api/health")]

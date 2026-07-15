@@ -107,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ShaderMask(
                         shaderCallback: (bounds) =>
                             AppColors.gradientAccent.createShader(bounds),
-                        child: const Text('X-IBook',
+                        child: const Text('PhysicsBook',
                             style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.w900,

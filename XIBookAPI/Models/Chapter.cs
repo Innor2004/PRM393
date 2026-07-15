@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace XIBookAPI.Models;
+namespace PhysicsBook.Models;
 
 public class Chapter
 {
@@ -21,3 +21,4 @@ public class Chapter
 
     public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
 }
+

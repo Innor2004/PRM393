@@ -2,11 +2,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using XIBookAPI.Data;
-using XIBookAPI.Models;
-using XIBookAPI.Services;
+using PhysicsBook.Data;
+using PhysicsBook.Models;
+using PhysicsBook.Services;
 
-namespace XIBookAPI.Controllers;
+namespace PhysicsBook.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -99,3 +99,4 @@ public class ProgressController : ControllerBase
         return Ok(new { message = "Đã hoàn thành bài học" });
     }
 }
+

@@ -27,6 +27,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
   int _totalQuestions = 0;
   List<Map<String, dynamic>> _userGrowth = [];
   List<Map<String, dynamic>> _lessonScores = [];
+  List<Map<String, dynamic>> _students = [];
+  Map<String, dynamic>? _selectedStudent;
+  Map<String, dynamic>? _studentProgress;
   bool _isLoading = true;
 
   @override
@@ -37,8 +40,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    await Future.wait([_loadChapters(), _loadStats()]);
+    await Future.wait([_loadChapters(), _loadStats(), _loadStudents()]);
     setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadStudents() async {
+    try {
+      final data = await _backend.getOne('/admin/users');
+      _students = (data['data'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
+    } catch (e) {
+      debugPrint('Admin load students error: $e');
+    }
   }
 
   Future<void> _loadChapters() async {
@@ -99,17 +113,39 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
+
     final screens = [
       _buildOverview(),
       _buildChapterManager(),
+      _buildStudentManager(),
     ];
+
+    Widget bodyContent;
+    if (_isLoading) {
+      bodyContent = const Center(child: CircularProgressIndicator());
+    } else if (_selectedStudent != null) {
+      bodyContent = _buildStudentDetail();
+    } else {
+      bodyContent = screens[_selectedIndex];
+    }
 
     return Container(
       decoration: BoxDecoration(gradient: AppColors.gradientSurface),
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: const Text('Admin Panel'),
+          title: Text(_selectedStudent != null
+              ? 'Chi tiết học sinh'
+              : 'Admin Panel'),
+          leading: _selectedStudent != null
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => setState(() {
+                    _selectedStudent = null;
+                    _studentProgress = null;
+                  }),
+                )
+              : null,
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 12),
@@ -129,23 +165,358 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ],
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : screens[_selectedIndex],
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-          destinations: const [
-            NavigationDestination(
-                icon: Icon(Icons.dashboard_outlined),
-                selectedIcon: Icon(Icons.dashboard),
-                label: 'Tổng quan'),
-            NavigationDestination(
-                icon: Icon(Icons.library_books_outlined),
-                selectedIcon: Icon(Icons.library_books),
-                label: 'Quản lý'),
+        body: bodyContent,
+        bottomNavigationBar: _selectedStudent != null
+            ? null
+            : NavigationBar(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+                destinations: const [
+                  NavigationDestination(
+                      icon: Icon(Icons.dashboard_outlined),
+                      selectedIcon: Icon(Icons.dashboard),
+                      label: 'Tổng quan'),
+                  NavigationDestination(
+                      icon: Icon(Icons.library_books_outlined),
+                      selectedIcon: Icon(Icons.library_books),
+                      label: 'Quản lý'),
+                  NavigationDestination(
+                      icon: Icon(Icons.people_outlined),
+                      selectedIcon: Icon(Icons.people),
+                      label: 'Học sinh'),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildStudentManager() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: Row(
+            children: [
+              Text('Danh sách học sinh',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textMain)),
+              const Spacer(),
+              Text('${_students.length} học sinh',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: _students.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.people_outline, size: 48, color: AppColors.textDim),
+                      const SizedBox(height: 8),
+                      Text('Chưa có học sinh nào', style: TextStyle(color: AppColors.textMuted)),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _students.length,
+                  itemBuilder: (_, i) => _buildStudentCard(_students[i]),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStudentCard(Map<String, dynamic> student) {
+    final name = student['name'] as String? ?? '';
+    final email = student['email'] as String? ?? '';
+    final completed = (student['completedLessons'] as num?)?.toInt() ?? 0;
+    final avgScore = (student['averageScore'] as num?)?.toDouble() ?? 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.bgDark.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.glassBorder),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _showStudentDetail(student),
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.gradientPrimary,
+              ),
+              child: Center(
+                child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textMain)),
+                  Text(email, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: avgScore >= 5 ? AppColors.success.withValues(alpha: 0.15) : AppColors.warning.withValues(alpha: 0.15),
+              ),
+              child: Text('${avgScore.toStringAsFixed(1)}',
+                  style: TextStyle(
+                    color: avgScore >= 5 ? AppColors.success : AppColors.warning,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  )),
+            ),
+            const SizedBox(width: 8),
+            Text('$completed bài',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right, color: AppColors.textDim, size: 20),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _showStudentDetail(Map<String, dynamic> student) async {
+    setState(() => _isLoading = true);
+    try {
+      final id = student['id'] as num;
+      final data = await _backend.getOne('/admin/users/$id/progress');
+      setState(() {
+        _selectedStudent = student;
+        _studentProgress = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      debugPrint('Load student progress error: $e');
+    }
+  }
+
+  Widget _buildStudentDetail() {
+    final progress = _studentProgress;
+    final userInfo = progress?['user'] as Map<String, dynamic>? ?? {};
+    final rawChapters = (progress?['chapters'] as List<dynamic>?) ?? [];
+    final chapters = <Map<String, dynamic>>[];
+    for (final ch in rawChapters) {
+      if (ch is Map<String, dynamic>) chapters.add(ch);
+    }
+    int completedCount = 0;
+    int totalLessons = 0;
+    for (final ch in chapters) {
+      final rawLessons = (ch['lessons'] as List<dynamic>?) ?? [];
+      for (final l in rawLessons) {
+        if (l is Map<String, dynamic>) {
+          totalLessons++;
+          final p = l['progress'] as Map<String, dynamic>?;
+          if (p != null && p['isCompleted'] == true) {
+            completedCount++;
+          }
+        }
+      }
+    }
+
+    final name = userInfo['name'] as String? ?? '';
+    final email = userInfo['email'] as String? ?? '';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.bgDark.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.glassBorder),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppColors.gradientPrimary,
+                  ),
+                  child: Center(
+                    child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 24)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textMain)),
+                      Text(email, style: TextStyle(color: AppColors.textMuted)),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          _progressChip('$completedCount/$totalLessons bài', AppColors.primary),
+                          const SizedBox(width: 8),
+                          _progressChip('${totalLessons > 0 ? (completedCount * 100 ~/ totalLessons) : 0}%', AppColors.success),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...chapters.map((ch) => _buildChapterProgressCard(ch)),
+        ],
+      ),
+    );
+  }
+
+  Widget _progressChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: color.withValues(alpha: 0.15),
+      ),
+      child: Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
+    );
+  }
+
+  Widget _buildChapterProgressCard(Map<String, dynamic> chapter) {
+    final title = chapter['title'] as String? ?? '';
+    final lessons = (chapter['lessons'] as List<dynamic>?)
+            ?.cast<Map<String, dynamic>>() ?? [];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.bgDark.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.glassBorder),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          colorScheme: ColorScheme.dark(
+            primary: AppColors.primary,
+            surface: AppColors.bgDark,
+          ),
+        ),
+        child: ExpansionTile(
+          leading: Container(
+            width: 42, height: 42,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: AppColors.gradientPrimary,
+            ),
+            child: Center(child: Icon(Icons.book, color: Colors.white, size: 20)),
+          ),
+          title: Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textMain)),
+          subtitle: Text('${lessons.length} bài học',
+              style: TextStyle(color: AppColors.textMuted)),
+          iconColor: AppColors.textMuted,
+          collapsedIconColor: AppColors.textMuted,
+          children: [
+            ...lessons.map((l) => _buildLessonProgressCard(l)),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLessonProgressCard(Map<String, dynamic> lesson) {
+    final lessonTitle = lesson['title'] as String? ?? '';
+    final orderIndex = (lesson['orderIndex'] as num?)?.toInt() ?? 0;
+    final progress = lesson['progress'] as Map<String, dynamic>?;
+    final isCompleted = progress?['isCompleted'] as bool? ?? false;
+    final quizScore = (progress?['quizScore'] as num?)?.toDouble();
+    final updatedAt = progress?['updatedAt'] as String? ?? '';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.glassFill,
+        borderRadius: BorderRadius.circular(12),
+        border: isCompleted ? Border.all(color: AppColors.success.withValues(alpha: 0.3)) : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32, height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isCompleted ? AppColors.success.withValues(alpha: 0.15) : AppColors.textDim.withValues(alpha: 0.15),
+            ),
+            child: Center(
+              child: Icon(
+                isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                size: 16,
+                color: isCompleted ? AppColors.success : AppColors.textDim,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Bài $orderIndex: $lessonTitle',
+                    style: TextStyle(
+                      color: AppColors.textMain,
+                      fontWeight: isCompleted ? FontWeight.w600 : FontWeight.normal,
+                    )),
+                if (updatedAt.isNotEmpty)
+                  Text(updatedAt.substring(0, 10),
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+              ],
+            ),
+          ),
+          if (quizScore != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: quizScore >= 5
+                    ? AppColors.success.withValues(alpha: 0.15)
+                    : AppColors.warning.withValues(alpha: 0.15),
+              ),
+              child: Text('${quizScore.toStringAsFixed(1)}/10',
+                  style: TextStyle(
+                    color: quizScore >= 5 ? AppColors.success : AppColors.warning,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  )),
+            )
+          else if (isCompleted)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: AppColors.textDim.withValues(alpha: 0.15),
+              ),
+              child: Text('Chưa quiz',
+                  style: TextStyle(color: AppColors.textDim, fontSize: 11)),
+            ),
+        ],
       ),
     );
   }
