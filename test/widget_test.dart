@@ -1,16 +1,22 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:project/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:project/models/lesson.dart';
+import 'package:project/screens/lesson/lesson_detail_screen.dart';
+import 'package:project/theme.dart';
 
 void main() {
-  testWidgets('App starts with splash screen', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
-    await tester.pumpWidget(const MyApp());
+  testWidgets('LessonDetailScreen hiển thị nội dung bài học', (tester) async {
+    AppColors.setMode(ThemeMode.light);
+    final lesson = Lesson(id: 1, chapterId: 1, title: 'Chuyển động thẳng đều',
+        orderIndex: 1, estimatedMinutes: 20,
+        contentBody: '# Bài 1\nNội dung bài học');
 
-    expect(find.text('X-IBook'), findsOneWidget);
-    expect(find.text('Ứng dụng sách điện tử thông minh'), findsOneWidget);
+    await tester.pumpWidget(
+      MaterialApp(home: LessonDetailScreen(lesson: lesson)),
+    );
+    await tester.pump();
 
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Chuyển động thẳng đều'), findsOneWidget);
+    expect(find.textContaining('Nội dung bài học'), findsOneWidget);
   });
 }

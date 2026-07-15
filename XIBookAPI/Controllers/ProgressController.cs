@@ -36,6 +36,18 @@ public class ProgressController : ControllerBase
         var completed = progress.Count(p => p.IsCompleted);
         double overallPercent = totalLessons > 0 ? (double)completed / totalLessons * 100 : 0;
 
+        var badges = await _db.UserBadges
+            .Where(ub => ub.UserId == userId)
+            .Select(ub => new
+            {
+                ub.Badge.Id,
+                ub.Badge.Name,
+                ub.Badge.Description,
+                ub.Badge.IconUrl,
+                ub.EarnedAt
+            })
+            .ToListAsync();
+
         return Ok(new
         {
             data = progress,
@@ -44,7 +56,8 @@ public class ProgressController : ControllerBase
                 totalLessons,
                 completedLessons = completed,
                 overallPercent = Math.Round(overallPercent, 1)
-            }
+            },
+            badges
         });
     }
 }

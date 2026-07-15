@@ -69,13 +69,13 @@ public static class DbInitializer
             db.SaveChanges();
         }
 
-        // Seed Badges (matching Flutter mock data in progress_provider.dart)
+        // Seed Badges
         if (!db.Badges.Any())
         {
             db.Badges.AddRange(
-                new Badge { Name = "Nhà vật lý", Description = "Đạt điểm 10 Vật lý đại cương", IconUrl = "🏆", RequiredScore = 100 },
-                new Badge { Name = "Học sinh chăm chỉ", Description = "Hoàn thành 5 bài học", IconUrl = "⭐", RequiredScore = 50 },
-                new Badge { Name = "Nhà thám hiểm", Description = "Hoàn thành tất cả chương", IconUrl = "🌟", RequiredScore = 200 }
+                new Badge { Name = "Nhà vật lý", Description = "Hoàn thành tất cả bài học với điểm trung bình từ 9.0 trở lên", IconUrl = "🏆", RequiredAvgScore = 90 },
+                new Badge { Name = "Học sinh chăm chỉ", Description = "Hoàn thành tất cả bài học với điểm trung bình từ 7.0 trở lên", IconUrl = "⭐", RequiredAvgScore = 70 },
+                new Badge { Name = "Nhà thám hiểm", Description = "Hoàn thành tất cả bài học với điểm trung bình từ 5.0 trở lên", IconUrl = "🌟", RequiredAvgScore = 50 }
             );
             db.SaveChanges();
         }
