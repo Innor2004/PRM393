@@ -67,6 +67,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
     if (quiz.isLoading) {
       return _buildScaffold(
+        isSubmitted: false,
         child: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
@@ -75,6 +76,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
     if (quiz.questions.isEmpty) {
       return _buildScaffold(
+        isSubmitted: false,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -90,6 +92,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     return _buildScaffold(
+      isSubmitted: quiz.isSubmitted,
       appBarActions: [
         if (!quiz.isSubmitted)
           Padding(
@@ -169,15 +172,25 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  Widget _buildScaffold({required Widget child, List<Widget>? appBarActions}) {
-    return Container(
-      decoration: BoxDecoration(gradient: AppColors.gradientSurface),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Bài tập: ${widget.lesson.title}'),
-          actions: appBarActions,
+  Widget _buildScaffold({
+    required Widget child,
+    required bool isSubmitted,
+    List<Widget>? appBarActions,
+  }) {
+    return PopScope(
+      // Chặn back hoàn toàn khi đã nộp bài, tránh quay lại sửa đáp án
+      canPop: !isSubmitted,
+      child: Container(
+        decoration: BoxDecoration(gradient: AppColors.gradientSurface),
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('Bài tập: ${widget.lesson.title}'),
+            // Ẩn nút back trên AppBar khi đã có điểm
+            automaticallyImplyLeading: !isSubmitted,
+            actions: appBarActions,
+          ),
+          body: child,
         ),
-        body: child,
       ),
     );
   }
@@ -386,35 +399,52 @@ class _QuizScreenState extends State<QuizScreen> {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: passed
-                  ? LinearGradient(colors: [
-                      AppColors.warning,
-                      Color(0xFFFCD34D),
-                    ])
-                  : LinearGradient(colors: [
-                      AppColors.textDim,
-                      AppColors.textMuted,
-                    ]),
-              boxShadow: passed
-                  ? [
-                      BoxShadow(
-                        color: AppColors.warning.withValues(alpha: 0.4),
-                        blurRadius: 40,
-                        offset: const Offset(0, 8),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: Icon(
-                passed ? Icons.emoji_events : Icons.replay,
-                size: 48,
-                color: Colors.white,
+          Tooltip(
+            message: passed ? '' : 'Nhấn để làm lại từ đầu',
+            child: GestureDetector(
+              onTap: passed
+                  ? null
+                  : () async {
+                      // Reset quiz và load lại câu hỏi để làm lại từ đầu
+                      await quiz.loadQuestions(widget.lesson.id);
+                    },
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: passed
+                      ? LinearGradient(colors: [
+                          AppColors.warning,
+                          Color(0xFFFCD34D),
+                        ])
+                      : LinearGradient(colors: [
+                          AppColors.primary,
+                          AppColors.primaryGlow,
+                        ]),
+                  boxShadow: passed
+                      ? [
+                          BoxShadow(
+                            color: AppColors.warning.withValues(alpha: 0.4),
+                            blurRadius: 40,
+                            offset: const Offset(0, 8),
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.5),
+                            blurRadius: 30,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                ),
+                child: Center(
+                  child: Icon(
+                    passed ? Icons.emoji_events : Icons.replay,
+                    size: 48,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),
