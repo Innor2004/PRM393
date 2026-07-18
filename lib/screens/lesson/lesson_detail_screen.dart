@@ -6,6 +6,7 @@ import '../../providers/progress_provider.dart';
 import '../../theme.dart';
 import '../../widgets/interactive_lab.dart';
 import '../../widgets/latex_renderer.dart';
+import '../../widgets/newton_second_law_lab.dart';
 
 class LessonDetailScreen extends StatefulWidget {
   final Lesson lesson;
@@ -25,8 +26,17 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   Future<void> _checkQuestions() async {
-    final hasQ = await context.read<QuizProvider>().hasQuestions(widget.lesson.id);
+    final hasQ = await context.read<QuizProvider>().hasQuestions(
+      widget.lesson.id,
+    );
     if (mounted) setState(() => _hasQuestions = hasQ);
+  }
+
+  // Kiểm tra bài hiện tại có phải Định luật II Newton không
+  bool _isNewtonSecondLaw() {
+    final lessonTitle = widget.lesson.title.toLowerCase().trim();
+
+    return lessonTitle.contains('định luật ii newton');
   }
 
   FormulaType? _getLabType() {
@@ -53,6 +63,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final labType = _getLabType();
+    final bool isNewtonSecondLaw = _isNewtonSecondLaw();
     return Container(
       decoration: BoxDecoration(gradient: AppColors.gradientSurface),
       child: Scaffold(
@@ -63,8 +74,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               IconButton(
                 icon: const Icon(Icons.quiz_outlined),
                 tooltip: 'Làm bài tập',
-                onPressed: () => Navigator.of(context)
-                    .pushNamed('/quiz', arguments: widget.lesson),
+                onPressed: () => Navigator.of(
+                  context,
+                ).pushNamed('/quiz', arguments: widget.lesson),
               ),
             if (_hasQuestions == false)
               IconButton(
@@ -82,7 +94,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               _buildInfoCard(),
               const SizedBox(height: 20),
               _buildContent(context, widget.lesson.contentBody ?? ''),
-              if (labType != null) ...[
+              if (isNewtonSecondLaw) ...[
+                const SizedBox(height: 24),
+                const NewtonSecondLawLab(),
+              ] else if (labType != null) ...[
                 const SizedBox(height: 24),
                 InteractiveLab(formulaType: labType),
               ],
@@ -112,14 +127,20 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               borderRadius: BorderRadius.circular(10),
               gradient: AppColors.gradientPrimary,
             ),
-            child: const Icon(Icons.timer_outlined,
-                color: Colors.white, size: 18),
+            child: const Icon(
+              Icons.timer_outlined,
+              color: Colors.white,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 10),
-          Text('${widget.lesson.estimatedMinutes} phút',
-              style: TextStyle(
-                  color: AppColors.textMain,
-                  fontWeight: FontWeight.w600)),
+          Text(
+            '${widget.lesson.estimatedMinutes} phút',
+            style: TextStyle(
+              color: AppColors.textMain,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const Spacer(),
           Container(
             padding: const EdgeInsets.all(8),
@@ -129,11 +150,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.menu_book,
-                    size: 16, color: AppColors.textMuted),
+                Icon(Icons.menu_book, size: 16, color: AppColors.textMuted),
                 const SizedBox(width: 4),
-                Text('Bài ${widget.lesson.orderIndex}',
-                    style: TextStyle(color: AppColors.textMuted)),
+                Text(
+                  'Bài ${widget.lesson.orderIndex}',
+                  style: TextStyle(color: AppColors.textMuted),
+                ),
               ],
             ),
           ),
@@ -152,7 +174,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         gradient: isComplete
-            ? LinearGradient(colors: [AppColors.success, AppColors.success.withValues(alpha: 0.8)])
+            ? LinearGradient(
+                colors: [
+                  AppColors.success,
+                  AppColors.success.withValues(alpha: 0.8),
+                ],
+              )
             : AppColors.gradientPrimary,
         boxShadow: [
           BoxShadow(
@@ -166,27 +193,37 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       child: ElevatedButton.icon(
         onPressed: isComplete
             ? _completeLesson
-            : () => Navigator.of(context)
-                .pushNamed('/quiz', arguments: widget.lesson),
-        icon: Icon(isComplete ? Icons.check_circle_outline : Icons.quiz_outlined, size: 20),
-        label: Text(isComplete ? 'Hoàn thành bài học' : 'Làm bài tập trắc nghiệm',
-            style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-                color: Colors.white)),
+            : () => Navigator.of(
+                context,
+              ).pushNamed('/quiz', arguments: widget.lesson),
+        icon: Icon(
+          isComplete ? Icons.check_circle_outline : Icons.quiz_outlined,
+          size: 20,
+        ),
+        label: Text(
+          isComplete ? 'Hoàn thành bài học' : 'Làm bài tập trắc nghiệm',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            color: Colors.white,
+          ),
+        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14)),
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
     );
   }
 
   Future<void> _completeLesson() async {
-    await context.read<ProgressProvider>().markLessonCompleted(widget.lesson.id);
+    await context.read<ProgressProvider>().markLessonCompleted(
+      widget.lesson.id,
+    );
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -195,57 +232,81 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     final elements = <Widget>[];
     for (final line in lines) {
       if (line.startsWith('# ')) {
-        elements.add(Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 8),
-          child: Text(line.substring(2),
+        elements.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 8),
+            child: Text(
+              line.substring(2),
               style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textMain)),
-        ));
-      } else if (line.startsWith('## ')) {
-        elements.add(Padding(
-          padding: const EdgeInsets.only(top: 12, bottom: 6),
-          child: Text(line.substring(3),
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textMain)),
-        ));
-      } else if (line.startsWith('### ')) {
-        elements.add(Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 4),
-          child: Text(line.substring(4),
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textMain)),
-        ));
-      } else if (line.startsWith('- ')) {
-        elements.add(Padding(
-          padding: const EdgeInsets.only(left: 16, bottom: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('• ',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary)),
-              Expanded(child: _buildRichText(line.substring(2))),
-            ],
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textMain,
+              ),
+            ),
           ),
-        ));
+        );
+      } else if (line.startsWith('## ')) {
+        elements.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 6),
+            child: Text(
+              line.substring(3),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textMain,
+              ),
+            ),
+          ),
+        );
+      } else if (line.startsWith('### ')) {
+        elements.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 4),
+            child: Text(
+              line.substring(4),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textMain,
+              ),
+            ),
+          ),
+        );
+      } else if (line.startsWith('- ')) {
+        elements.add(
+          Padding(
+            padding: const EdgeInsets.only(left: 16, bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '• ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                Expanded(child: _buildRichText(line.substring(2))),
+              ],
+            ),
+          ),
+        );
       } else if (line.trim().isEmpty) {
         elements.add(const SizedBox(height: 8));
       } else {
-        elements.add(Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: _buildRichText(line),
-        ));
+        elements.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: _buildRichText(line),
+          ),
+        );
       }
     }
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start, children: elements);
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: elements,
+    );
   }
 
   Widget _buildRichText(String text) {
@@ -255,30 +316,45 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       int lastEnd = 0;
       for (final match in latexRegex.allMatches(text)) {
         if (match.start > lastEnd) {
-          parts.add(Text(
-            text.substring(lastEnd, match.start),
-            style: TextStyle(
-                fontSize: 15, height: 1.7, color: AppColors.textMain),
-          ));
+          parts.add(
+            Text(
+              text.substring(lastEnd, match.start),
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.7,
+                color: AppColors.textMain,
+              ),
+            ),
+          );
         }
-        parts.add(Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: LatexRenderer(match.group(1)!),
-        ));
+        parts.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: LatexRenderer(match.group(1)!),
+          ),
+        );
         lastEnd = match.end;
       }
       if (lastEnd < text.length) {
-        parts.add(Text(
-          text.substring(lastEnd),
-          style: TextStyle(
-              fontSize: 15, height: 1.7, color: AppColors.textMain),
-        ));
+        parts.add(
+          Text(
+            text.substring(lastEnd),
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.7,
+              color: AppColors.textMain,
+            ),
+          ),
+        );
       }
       return Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center, children: parts);
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: parts,
+      );
     }
-    return Text(text,
-        style: TextStyle(
-            fontSize: 15, height: 1.7, color: AppColors.textMain));
+    return Text(
+      text,
+      style: TextStyle(fontSize: 15, height: 1.7, color: AppColors.textMain),
+    );
   }
 }
