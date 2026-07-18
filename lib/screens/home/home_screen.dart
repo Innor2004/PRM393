@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/lesson_provider.dart';
 import '../../providers/progress_provider.dart';
+import '../../providers/quiz_provider.dart';
 import '../../theme.dart';
+import '../../services/backend_service.dart';
 import '../../providers/theme_provider.dart';
 import '../../widgets/score_chart.dart';
 import '../../widgets/search_bar.dart';
@@ -19,20 +21,66 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  bool _isOnline = false;
+  bool _isSyncing = false;
 
   @override
   void initState() {
     super.initState();
+    _checkConnection();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final auth = context.read<AuthProvider>();
       final lessonProv = context.read<LessonProvider>();
       final progressProv = context.read<ProgressProvider>();
+      
+      context.read<QuizProvider>().setUserId(auth.user?.id ?? 1);
+      
       await lessonProv.loadChapters();
       lessonProv.loadAllLessons(lessonProv.chapters);
-      progressProv
-        ..setUserId(auth.user?.id ?? 1)
-        ..loadProgress();
+      
+      progressProv.setUserId(auth.user?.id ?? 1);
+      await progressProv.loadProgress();
+
+      if (_isOnline) {
+        await progressProv.syncPendingData();
+      }
     });
+  }
+
+  Future<void> _checkConnection() async {
+    final online = await BackendService().checkHealth();
+    if (mounted) {
+      setState(() {
+        _isOnline = online;
+      });
+    }
+  }
+
+  Future<void> _handleSync() async {
+    setState(() => _isSyncing = true);
+    await _checkConnection();
+    if (!_isOnline) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể đồng bộ vì đang ngoại tuyến!')),
+        );
+      }
+      setState(() => _isSyncing = false);
+      return;
+    }
+
+    if (!mounted) return;
+    final success = await context.read<ProgressProvider>().syncPendingData();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success 
+              ? 'Đồng bộ dữ liệu học tập thành công!' 
+              : 'Đồng bộ dữ liệu hoàn tất!'),
+        ),
+      );
+    }
+    setState(() => _isSyncing = false);
   }
 
   @override
@@ -124,10 +172,45 @@ class _HomeScreenState extends State<HomeScreen> {
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white)),
                                 const SizedBox(height: 4),
-                                Text('Hôm nay học tiếp bài mới nhé!',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white.withValues(alpha: 0.9))),
+                                Row(
+                                  children: [
+                                    Text('Hôm nay học tiếp bài mới nhé!',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.white.withValues(alpha: 0.9))),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: _isOnline ? Colors.green.withValues(alpha: 0.2) : Colors.orange.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(color: _isOnline ? Colors.green : Colors.orange, width: 0.8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 6,
+                                            height: 6,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: _isOnline ? Colors.green : Colors.orange,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _isOnline ? 'Online' : 'Offline',
+                                            style: TextStyle(
+                                              color: _isOnline ? Colors.green[100] : Colors.orange[100],
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ),
@@ -317,6 +400,43 @@ class _HomeScreenState extends State<HomeScreen> {
                     'Đã hoàn thành ${progress.progressList.length} bài học',
                     style: TextStyle(
                         color: AppColors.textMuted, fontSize: 14)),
+                if (progress.pendingCount > 0) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.warning.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.sync_problem, color: AppColors.warning, size: 14),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'Chưa sync: ${progress.pendingCount}',
+                            style: TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _isSyncing ? null : _handleSync,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            backgroundColor: AppColors.warning,
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          ),
+                          child: _isSyncing 
+                              ? const SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 1.5, valueColor: AlwaysStoppedAnimation<Color>(Colors.black)))
+                              : const Text('Đồng bộ', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

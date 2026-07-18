@@ -40,6 +40,7 @@ dependencies:
   fl_chart: ^0.70.0
   image_picker: ^1.1.2
   http_parser: ^4.1.2
+  sqflite_common_ffi: ^2.4.2
 
 dev_dependencies:
   flutter_test:

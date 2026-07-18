@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,9 +34,9 @@ class AuthProvider extends ChangeNotifier {
     await _backend.init();
 
     final available = await _backend.checkHealth();
+    final prefs = await SharedPreferences.getInstance();
 
     if (available) {
-      final prefs = await SharedPreferences.getInstance();
       final savedToken = prefs.getString('backend_token');
 
       if (savedToken != null && savedToken.isNotEmpty) {
@@ -44,6 +45,7 @@ class AuthProvider extends ChangeNotifier {
         try {
           final result = await _backend.getOne('/auth/me');
           _user = User.fromJson(Map<String, dynamic>.from(result));
+          await prefs.setString('cached_user_json', jsonEncode(_user!.toJson()));
           _status = AuthStatus.authenticated;
           notifyListeners();
           return;
@@ -51,6 +53,7 @@ class AuthProvider extends ChangeNotifier {
           debugPrint('Auto login error: $error');
           _backend.setToken(null);
           await prefs.remove('backend_token');
+          await prefs.remove('cached_user_json');
         }
       }
 
@@ -58,6 +61,22 @@ class AuthProvider extends ChangeNotifier {
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return;
+    }
+
+    final savedToken = prefs.getString('backend_token');
+    final cachedUserJson = prefs.getString('cached_user_json');
+
+    if (savedToken != null && savedToken.isNotEmpty && cachedUserJson != null) {
+      _backend.setToken(savedToken);
+      try {
+        _user = User.fromJson(jsonDecode(cachedUserJson) as Map<String, dynamic>);
+        _status = AuthStatus.authenticated;
+        debugPrint('Logged in offline with cached user: ${_user!.name}');
+        notifyListeners();
+        return;
+      } catch (e) {
+        debugPrint('Failed to parse cached user: $e');
+      }
     }
 
     _user = null;
@@ -93,6 +112,7 @@ class AuthProvider extends ChangeNotifier {
       await prefs.setString('backend_token', token);
 
       _user = User.fromJson(userData);
+      await prefs.setString('cached_user_json', jsonEncode(_user!.toJson()));
       _status = AuthStatus.authenticated;
       _setLoading(false);
       return true;
@@ -130,6 +150,7 @@ class AuthProvider extends ChangeNotifier {
       await prefs.setString('backend_token', token);
 
       _user = User.fromJson(userData);
+      await prefs.setString('cached_user_json', jsonEncode(_user!.toJson()));
       _status = AuthStatus.authenticated;
       _setLoading(false);
       return true;
@@ -159,6 +180,8 @@ class AuthProvider extends ChangeNotifier {
         body: {'name': cleanName},
       );
       _user = User.fromJson(result);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cached_user_json', jsonEncode(_user!.toJson()));
       _setLoading(false);
       return _user != null;
     } catch (error) {
@@ -198,6 +221,8 @@ class AuthProvider extends ChangeNotifier {
       }
 
       _user = User.fromJson(result);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cached_user_json', jsonEncode(_user!.toJson()));
       _setLoading(false);
       return true;
     } catch (error) {
@@ -252,6 +277,7 @@ class AuthProvider extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('backend_token');
+    await prefs.remove('cached_user_json');
 
     _user = null;
     _status = AuthStatus.unauthenticated;
