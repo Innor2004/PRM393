@@ -60,7 +60,7 @@ public class QuizController : ControllerBase
             _db.Progresses.Add(progress);
         }
 
-        progress.IsCompleted = true;
+        progress.IsCompleted = score >= 5;
         progress.QuizScore = (decimal)score;
         progress.CompletionPercent = (decimal)(score >= 5 ? 100 : score * 10);
         progress.UpdatedAt = DateTime.UtcNow;

@@ -530,14 +530,19 @@ class _QuizScreenState extends State<QuizScreen> {
           const SizedBox(height: 16),
           _buildGradientButton(
             onPressed: () {
-              progressProv.markLessonCompleted(widget.lesson.id, score: score);
-              Navigator.of(context).popUntil(ModalRoute.withName('/chapter-lessons'));
+              if (passed) {
+                progressProv.markLessonCompleted(widget.lesson.id, score: score);
+                Navigator.of(context).popUntil(ModalRoute.withName('/chapter-lessons'));
+              } else {
+                Navigator.of(context).pop();
+              }
             },
-            child: const Text('Hoàn thành và quay lại',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
+            child: Text(
+              passed ? 'Hoàn thành và quay lại' : 'Quay lại bài học',
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white)),
           ),
         ],
       ),
