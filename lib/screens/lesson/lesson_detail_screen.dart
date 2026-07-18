@@ -35,6 +35,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         return FormulaType.uniformMotion;
       case 2:
         return FormulaType.acceleratedMotion;
+      case 3:
+        return FormulaType.freeFall;
+      case 7:
+        return FormulaType.momentOfForce;
+      case 10:
+        return FormulaType.energyConversion;
       case 6:
         return FormulaType.newtonSecondLaw;
       case 9:
