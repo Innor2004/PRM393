@@ -140,178 +140,168 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(gradient: AppColors.gradientSurface),
       child: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              automaticallyImplyLeading: false,
-              expandedHeight: 160,
-              floating: false,
-              pinned: true,
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [AppColors.primary, AppColors.primaryGlow],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  automaticallyImplyLeading: false,
+                  expandedHeight: 160,
+                  floating: false,
+                  pinned: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.primary, AppColors.primaryGlow],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Chào ${user?.name ?? 'Bạn'}!',
-                                    style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white)),
-                                const SizedBox(height: 4),
-                                Row(
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Hôm nay học tiếp bài mới nhé!',
-                                        style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.white.withValues(alpha: 0.9))),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: _isOnline ? Colors.green.withValues(alpha: 0.2) : Colors.orange.withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: _isOnline ? Colors.green : Colors.orange, width: 0.8),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 6,
-                                            height: 6,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: _isOnline ? Colors.green : Colors.orange,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            _isOnline ? 'Online' : 'Offline',
+                                    Text('Chào ${user?.name ?? 'Bạn'}!',
+                                        style: const TextStyle(
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white)),
+                                    const SizedBox(height: 4),
+                                    Wrap(
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      spacing: 8,
+                                      runSpacing: 4,
+                                      children: [
+                                        Text('Hôm nay học tiếp bài mới nhé!',
                                             style: TextStyle(
-                                              color: _isOnline ? Colors.green[100] : Colors.orange[100],
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                                fontSize: 14,
+                                                color: Colors.white.withValues(alpha: 0.9))),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: _isOnline ? Colors.green.withValues(alpha: 0.2) : Colors.orange.withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(color: _isOnline ? Colors.green : Colors.orange, width: 0.8),
                                           ),
-                                        ],
-                                      ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 6,
+                                                height: 6,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: _isOnline ? Colors.green : Colors.orange,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                _isOnline ? 'Online' : 'Offline',
+                                                style: TextStyle(
+                                                  color: _isOnline ? Colors.green[100] : Colors.orange[100],
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: 0.15),
-                            ),
-                            child: const Icon(Icons.auto_stories, color: Colors.white, size: 22),
+                              ),
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                ),
+                                child: const Icon(Icons.auto_stories, color: Colors.white, size: 22),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
+                  actions: [
+                    const SearchButton(),
+                    IconButton(
+                      icon: Icon(context.watch<ThemeProvider>().isDarkMode ? Icons.light_mode : Icons.dark_mode),
+                      onPressed: () => context.read<ThemeProvider>().toggleTheme(),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout),
+                      onPressed: () async {
+                        await context.read<AuthProvider>().logout();
+                        if (context.mounted) {
+                          Navigator.of(context).pushReplacementNamed('/login');
+                        }
+                      },
+                    ),
+                  ],
                 ),
-              ),
-              actions: [
-                const SearchButton(),
-                IconButton(
-                  icon: Icon(context.watch<ThemeProvider>().isDarkMode ? Icons.light_mode : Icons.dark_mode),
-                  onPressed: () => context.read<ThemeProvider>().toggleTheme(),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: () async {
-                    await context.read<AuthProvider>().logout();
-                    if (context.mounted) {
-                      Navigator.of(context).pushReplacementNamed('/login');
-                    }
-                  },
-                ),
-              ],
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth >= 600;
-                          if (isWide) {
-                            return IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: _buildProgressCard(progress, isWide: true),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: ScoreChart(progressList: progress.progressList, lessonTooltips: lessonTooltips),
-                                  ),
-                                ],
-                              ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isWide = constraints.maxWidth >= 650;
+                            if (isWide) {
+                              return IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: _buildProgressCard(progress, isWide: true),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: ScoreChart(progressList: progress.progressList, lessonTooltips: lessonTooltips),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return Column(
+                              children: [
+                                _buildProgressCard(progress, isWide: false),
+                                const SizedBox(height: 16),
+                                ScoreChart(progressList: progress.progressList, lessonTooltips: lessonTooltips),
+                              ],
                             );
-                          }
-                          return Column(
-                            children: [
-                              _buildProgressCard(progress, isWide: false),
-                              const SizedBox(height: 16),
-                              ScoreChart(progressList: progress.progressList, lessonTooltips: lessonTooltips),
-                            ],
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      _chapterHeader(lessonProv),
-                      const SizedBox(height: 12),
-                    ],
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        _chapterHeader(lessonProv),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: (MediaQuery.of(context).size.width >= 1500
-                  ? SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 3.5,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final ch = lessonProv.chapters[index];
-                          return _buildChapterCard(ch, lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList()));
-                        },
-                        childCount: lessonProv.chapters.length,
-                      ),
-                    )
-                  : MediaQuery.of(context).size.width >= 880
-                      ? SliverGrid(
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: Builder(
+                    builder: (context) {
+                      final width = MediaQuery.of(context).size.width;
+                      if (width >= 1050) {
+                        return SliverGrid(
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
+                            crossAxisCount: 3,
                             mainAxisSpacing: 12,
                             crossAxisSpacing: 12,
                             childAspectRatio: 3.5,
@@ -323,18 +313,40 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                             childCount: lessonProv.chapters.length,
                           ),
-                        )
-                      : SliverList.separated(
+                        );
+                      } else if (width >= 600) {
+                        return SliverGrid(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 3.2,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final ch = lessonProv.chapters[index];
+                              return _buildChapterCard(ch, lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList()));
+                            },
+                            childCount: lessonProv.chapters.length,
+                          ),
+                        );
+                      } else {
+                        return SliverList.separated(
                           itemBuilder: (context, index) {
                             final ch = lessonProv.chapters[index];
                             return _buildChapterCard(ch, lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList()));
                           },
                           separatorBuilder: (_, _) => const SizedBox(height: 12),
                           itemCount: lessonProv.chapters.length,
-                        )),
+                        );
+                      }
+                    },
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              ],
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          ],
+          ),
         ),
       ),
     );

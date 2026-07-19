@@ -119,55 +119,61 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
           ),
       ],
-      child: Column(
-        children: [
-          if (!quiz.isSubmitted)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      gradient: AppColors.gradientPrimary,
-                    ),
-                    child: Text(
-                        'Câu ${quiz.currentIndex + 1}/${quiz.totalQuestions}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            fontSize: 13)),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            children: [
+              if (!quiz.isSubmitted)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: AppColors.gradientPrimary,
+                        ),
+                        child: Text(
+                            'Câu ${quiz.currentIndex + 1}/${quiz.totalQuestions}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                fontSize: 13)),
+                      ),
+                      const Spacer(),
+                      Text(
+                          '${((quiz.currentIndex + 1) / quiz.totalQuestions * 100).toInt()}%',
+                            style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600)),
+                    ],
                   ),
-                  const Spacer(),
-                  Text(
-                      '${((quiz.currentIndex + 1) / quiz.totalQuestions * 100).toInt()}%',
-                        style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
-          if (!quiz.isSubmitted)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: (quiz.currentIndex + 1) / quiz.totalQuestions,
-                  minHeight: 6,
-                  backgroundColor: AppColors.glassBorder,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
+              if (!quiz.isSubmitted)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: (quiz.currentIndex + 1) / quiz.totalQuestions,
+                      minHeight: 6,
+                      backgroundColor: AppColors.glassBorder,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: quiz.isSubmitted
+                    ? _buildResult(context, quiz)
+                    : _buildQuestion(context, quiz),
               ),
-            ),
-          Expanded(
-            child: quiz.isSubmitted
-                ? _buildResult(context, quiz)
-                : _buildQuestion(context, quiz),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

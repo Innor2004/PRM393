@@ -86,25 +86,33 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               ),
           ],
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildInfoCard(),
-              const SizedBox(height: 20),
-              _buildContent(context, widget.lesson.contentBody ?? ''),
-              if (isNewtonSecondLaw) ...[
-                const SizedBox(height: 24),
-                const NewtonSecondLawLab(),
-              ] else if (labType != null) ...[
-                const SizedBox(height: 24),
-                InteractiveLab(formulaType: labType),
-              ],
-              const SizedBox(height: 24),
-              _buildQuizButton(),
-              const SizedBox(height: 24),
-            ],
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 880),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoCard(),
+                    const SizedBox(height: 20),
+                    _buildContent(context, widget.lesson.contentBody ?? ''),
+                    if (isNewtonSecondLaw) ...[
+                      const SizedBox(height: 24),
+                      const NewtonSecondLawLab(),
+                    ] else if (labType != null) ...[
+                      const SizedBox(height: 24),
+                      InteractiveLab(formulaType: labType),
+                    ],
+                    const SizedBox(height: 24),
+                    _buildQuizButton(),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

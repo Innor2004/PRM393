@@ -124,12 +124,10 @@ class _InteractiveLabState extends State<InteractiveLab> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final maxLabWidth = screenWidth > 520 ? 480.0 : screenWidth - 32;
     return Center(
       child: Container(
-      constraints: BoxConstraints(maxWidth: maxLabWidth),
-      padding: const EdgeInsets.all(14),
+        constraints: const BoxConstraints(maxWidth: 800),
+        padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgDark.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
