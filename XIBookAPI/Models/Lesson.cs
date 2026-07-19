@@ -16,6 +16,8 @@ public class Lesson
 
     public int EstimatedMinutes { get; set; } = 15;
 
+    public int DifficultyStars { get; set; } = 1;
+
     public string? ContentBody { get; set; }
 
     [ForeignKey(nameof(ChapterId))]

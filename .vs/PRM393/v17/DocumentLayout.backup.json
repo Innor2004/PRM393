@@ -96,8 +96,10 @@
               "RelativeDocumentMoniker": "XIBookAPI\\Migrations\\20260719025237_AddQuizHistory.Designer.cs",
               "ToolTip": "D:\\FPT\\SU26\\PRM393\\PRM393\\XIBookAPI\\Migrations\\20260719025237_AddQuizHistory.Designer.cs",
               "RelativeToolTip": "XIBookAPI\\Migrations\\20260719025237_AddQuizHistory.Designer.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAAEIAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-19T03:08:01.378Z"
+              "WhenOpened": "2026-07-19T03:08:01.378Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -109,7 +111,8 @@
               "RelativeToolTip": "XIBookAPI\\Migrations\\20260719025237_AddQuizHistory.cs",
               "ViewState": "AgIAACoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-19T03:07:55.162Z"
+              "WhenOpened": "2026-07-19T03:07:55.162Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -121,7 +124,8 @@
               "RelativeToolTip": "XIBookAPI\\Migrations\\AppDbContextModelSnapshot.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-19T03:07:51.496Z"
+              "WhenOpened": "2026-07-19T03:07:51.496Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -133,7 +137,8 @@
               "RelativeToolTip": "XIBookAPI\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-19T03:07:48.492Z"
+              "WhenOpened": "2026-07-19T03:07:48.492Z",
+              "EditorCaption": ""
             }
           ]
         },

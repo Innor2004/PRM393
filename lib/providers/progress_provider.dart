@@ -46,15 +46,25 @@ class ProgressProvider extends ChangeNotifier {
       }
     }
 
+    final existing = _progressList.where((p) => p.lessonId == lessonId).toList();
+    double? bestScore = score;
+    if (existing.isNotEmpty && existing.first.quizScore != null) {
+      if (score != null && score < existing.first.quizScore!) {
+        bestScore = existing.first.quizScore;
+      } else if (score == null) {
+        bestScore = existing.first.quizScore;
+      }
+    }
+
     _progressList.removeWhere((p) => p.lessonId == lessonId);
     _progressList.add(Progress(
       id: DateTime.now().millisecondsSinceEpoch,
       userId: _userId,
       lessonId: lessonId,
       isCompleted: true,
-      quizScore: score,
-      completionPercent: score != null
-          ? (score >= 5 ? 100 : score * 10)
+      quizScore: bestScore,
+      completionPercent: bestScore != null
+          ? (bestScore >= 5 ? 100 : bestScore * 10)
           : 100,
     ));
     _calculateOverall();

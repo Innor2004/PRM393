@@ -181,9 +181,11 @@ class _LoginScreenState extends State<LoginScreen>
                                   const Icon(Icons.error_outline,
                                       color: Colors.red, size: 20),
                                   const SizedBox(width: 8),
-                                  Text(auth.error!,
-                                      style: const TextStyle(
-                                          color: Colors.red, fontSize: 13)),
+                                  Expanded(
+                                    child: Text(auth.error!,
+                                        style: const TextStyle(
+                                            color: Colors.red, fontSize: 13)),
+                                  ),
                                 ]),
                               ),
                             );

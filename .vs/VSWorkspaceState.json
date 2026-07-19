@@ -1,6 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\XIBookAPI",
+    "\\XIBookAPI\\Migrations",
+    "\\XIBookAPI\\Models"
   ],
+  "SelectedNode": "\\XIBookAPI\\Models",
   "PreviewInSolutionExplorer": false
 }

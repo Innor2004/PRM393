@@ -51,6 +51,27 @@ public class QuizController : ControllerBase
 
         double score = questions.Count > 0 ? (double)correctCount / questions.Count * 10 : 0;
 
+        var attempt = new QuizAttempt
+        {
+            UserId = userId,
+            LessonId = request.LessonId,
+            Score = (decimal)score,
+            CorrectCount = correctCount,
+            TotalQuestions = questions.Count
+        };
+
+        foreach (var q in questions)
+        {
+            var answer = request.Answers.FirstOrDefault(a => a.QuestionId == q.Id);
+            attempt.Details.Add(new QuizAttemptDetail
+            {
+                QuestionId = q.Id,
+                SelectedOption = answer?.SelectedOption,
+                IsCorrect = answer?.SelectedOption == q.CorrectOption
+            });
+        }
+        _db.QuizAttempts.Add(attempt);
+
         var progress = await _db.Progresses
             .FirstOrDefaultAsync(p => p.UserId == userId && p.LessonId == request.LessonId);
 
@@ -61,8 +82,11 @@ public class QuizController : ControllerBase
         }
 
         progress.IsCompleted = true;
-        progress.QuizScore = (decimal)score;
-        progress.CompletionPercent = (decimal)(score >= 5 ? 100 : score * 10);
+        if (progress.QuizScore == null || (decimal)score > progress.QuizScore)
+        {
+            progress.QuizScore = (decimal)score;
+            progress.CompletionPercent = (decimal)(score >= 5 ? 100 : score * 10);
+        }
         progress.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
@@ -71,6 +95,41 @@ public class QuizController : ControllerBase
         return Ok(new QuizResultResponse(
             score, correctCount, questions.Count, details
         ));
+    }
+
+    [HttpGet("history/{lessonId}")]
+    public async Task<ActionResult<List<QuizAttemptDto>>> GetHistory(long lessonId)
+    {
+        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var attempts = await _db.QuizAttempts
+            .Include(a => a.Details)
+            .ThenInclude(d => d.Question)
+            .Where(a => a.UserId == userId && a.LessonId == lessonId)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+
+        var result = attempts.Select(a => new QuizAttemptDto
+        {
+            Id = a.Id,
+            LessonId = a.LessonId,
+            Score = (double)a.Score,
+            CorrectCount = a.CorrectCount,
+            TotalQuestions = a.TotalQuestions,
+            CreatedAt = a.CreatedAt,
+            Details = a.Details.Select(d => new QuizAttemptDetailDto
+            {
+                Id = d.Id,
+                QuestionId = d.QuestionId,
+                QuestionText = d.Question!.QuestionText,
+                SelectedOption = d.SelectedOption,
+                CorrectOption = d.Question.CorrectOption,
+                IsCorrect = d.IsCorrect,
+                Explanation = d.Question.Explanation
+            }).ToList()
+        }).ToList();
+
+        return Ok(result);
     }
 }
 

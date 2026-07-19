@@ -29,6 +29,51 @@ public class AdminController : ControllerBase
         return Ok(new { data = users });
     }
 
+    [HttpGet("users/{id}/progress")]
+    public async Task<ActionResult> GetUserProgress(long id)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user == null) return NotFound(new { message = "Không tìm thấy học sinh" });
+
+        var progresses = await _db.Progresses.Where(p => p.UserId == id).ToListAsync();
+
+        var chapters = await _db.Chapters
+            .Include(c => c.Lessons)
+            .OrderBy(c => c.OrderIndex)
+            .ToListAsync();
+
+        var resultChapters = chapters.Select(c => new
+        {
+            c.Id,
+            c.Title,
+            Lessons = c.Lessons.OrderBy(l => l.OrderIndex).Select(l =>
+            {
+                var p = progresses.FirstOrDefault(x => x.LessonId == l.Id);
+                return new
+                {
+                    l.Id,
+                    l.Title,
+                    l.OrderIndex,
+                    Progress = p != null ? new
+                    {
+                        p.IsCompleted,
+                        p.QuizScore,
+                        p.UpdatedAt
+                    } : null
+                };
+            })
+        });
+
+        return Ok(new
+        {
+            data = new
+            {
+                user = new { user.Id, user.Name, user.Email },
+                chapters = resultChapters
+            }
+        });
+    }
+
     [HttpPost("chapters")]
     public async Task<ActionResult> CreateChapter(Chapter chapter)
     {
@@ -46,6 +91,7 @@ public class AdminController : ControllerBase
         lesson.Title = updated.Title;
         lesson.ContentBody = updated.ContentBody;
         lesson.EstimatedMinutes = updated.EstimatedMinutes;
+        lesson.DifficultyStars = updated.DifficultyStars;
         await _db.SaveChangesAsync();
 
         return Ok(new { data = lesson });
@@ -56,6 +102,9 @@ public class AdminController : ControllerBase
     {
         var lesson = await _db.Lessons.FindAsync(id);
         if (lesson == null) return NotFound();
+
+        // Xóa tất cả các câu hỏi của bài học này bằng 1 truy vấn duy nhất
+        await _db.Questions.Where(q => q.LessonId == id).ExecuteDeleteAsync();
 
         _db.Lessons.Remove(lesson);
         await _db.SaveChangesAsync();
@@ -81,13 +130,12 @@ public class AdminController : ControllerBase
         var chapter = await _db.Chapters.FindAsync(id);
         if (chapter == null) return NotFound();
 
-        var lessons = await _db.Lessons.Where(l => l.ChapterId == id).ToListAsync();
-        foreach (var lesson in lessons)
-        {
-            var questions = await _db.Questions.Where(q => q.LessonId == lesson.Id).ToListAsync();
-            _db.Questions.RemoveRange(questions);
-        }
-        _db.Lessons.RemoveRange(lessons);
+        // Xóa tất cả các câu hỏi thuộc các bài học của chương này bằng 1 truy vấn duy nhất (Tránh N+1 query)
+        await _db.Questions.Where(q => q.Lesson!.ChapterId == id).ExecuteDeleteAsync();
+        
+        // Xóa tất cả các bài học của chương này bằng 1 truy vấn duy nhất
+        await _db.Lessons.Where(l => l.ChapterId == id).ExecuteDeleteAsync();
+        
         _db.Chapters.Remove(chapter);
         await _db.SaveChangesAsync();
 

@@ -220,7 +220,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final ch = lessonProv.chapters[index];
-                          return _buildChapterCard(ch, lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList()));
+                          final isCompleted = lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList());
+                          final progressStr = lessonProv.getChapterProgressStr(ch.id, completedLessonIds.toList());
+                          return _buildChapterCard(ch, isCompleted, progressStr);
                         },
                         childCount: lessonProv.chapters.length,
                       ),
@@ -236,7 +238,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
                               final ch = lessonProv.chapters[index];
-                              return _buildChapterCard(ch, lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList()));
+                              final isCompleted = lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList());
+                              final progressStr = lessonProv.getChapterProgressStr(ch.id, completedLessonIds.toList());
+                              return _buildChapterCard(ch, isCompleted, progressStr);
                             },
                             childCount: lessonProv.chapters.length,
                           ),
@@ -244,7 +248,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       : SliverList.separated(
                           itemBuilder: (context, index) {
                             final ch = lessonProv.chapters[index];
-                            return _buildChapterCard(ch, lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList()));
+                            final isCompleted = lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList());
+                            final progressStr = lessonProv.getChapterProgressStr(ch.id, completedLessonIds.toList());
+                            return _buildChapterCard(ch, isCompleted, progressStr);
                           },
                           separatorBuilder: (_, _) => const SizedBox(height: 12),
                           itemCount: lessonProv.chapters.length,
@@ -340,7 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildChapterCard(dynamic chapter, bool isCompleted) {
+  Widget _buildChapterCard(dynamic chapter, bool isCompleted, String progressStr) {
     return Container(
       margin: EdgeInsets.zero,
       decoration: BoxDecoration(
@@ -419,14 +425,29 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: AppColors.glassFill,
-                  ),
-                  child: Icon(Icons.chevron_right,
-                      color: AppColors.textMuted, size: 20),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      progressStr,
+                      style: TextStyle(
+                        color: isCompleted ? AppColors.primary : AppColors.textMuted,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: AppColors.glassFill,
+                      ),
+                      child: Icon(Icons.chevron_right,
+                          color: AppColors.textMuted, size: 20),
+                    ),
+                  ],
                 ),
               ],
             ),

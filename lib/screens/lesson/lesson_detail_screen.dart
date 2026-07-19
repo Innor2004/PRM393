@@ -82,6 +82,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               ],
               const SizedBox(height: 24),
               _buildQuizButton(),
+              if (_hasQuestions == true) ...[
+                const SizedBox(height: 12),
+                _buildHistoryButton(),
+              ],
               const SizedBox(height: 24),
             ],
           ),
@@ -172,6 +176,32 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryButton() {
+    return Container(
+      width: double.infinity,
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+        color: AppColors.primary.withValues(alpha: 0.1),
+      ),
+      child: TextButton.icon(
+        onPressed: () => Navigator.of(context)
+            .pushNamed('/quiz-history', arguments: widget.lesson),
+        icon: const Icon(Icons.history, size: 20),
+        label: const Text('Xem lịch sử bài làm',
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15)),
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14)),
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/question.dart';
+import '../models/quiz_attempt.dart';
 import '../services/backend_service.dart';
 
 class QuizProvider extends ChangeNotifier {
@@ -107,6 +108,16 @@ class QuizProvider extends ChangeNotifier {
       return data.isNotEmpty;
     } catch (_) {
       return false;
+    }
+  }
+
+  Future<List<QuizAttempt>> getQuizHistory(int lessonId) async {
+    try {
+      final data = await _backend.getList('/quiz/history/$lessonId');
+      return data.map((j) => QuizAttempt.fromJson(Map<String, dynamic>.from(j))).toList();
+    } catch (e) {
+      debugPrint('getQuizHistory error: $e');
+      return [];
     }
   }
 
