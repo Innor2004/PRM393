@@ -1,0 +1,242 @@
+CREATE DATABASE XIBookDB;
+GO
+
+USE XIBookDB;
+GO
+
+-- BADGES
+
+CREATE TABLE Badges
+(
+Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+Name NVARCHAR(100) NOT NULL,
+
+Description NVARCHAR(500) NULL,
+
+IconUrl NVARCHAR(500) NULL,
+
+RequiredScore INT DEFAULT 0
+
+
+);
+GO
+
+-- USERS
+
+CREATE TABLE Users
+(
+Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+Name NVARCHAR(100) NOT NULL,
+
+Email NVARCHAR(255) NOT NULL UNIQUE,
+
+PasswordHash NVARCHAR(500) NOT NULL,
+
+Role NVARCHAR(20) NOT NULL DEFAULT 'Student',
+
+AvatarUrl NVARCHAR(500) NULL,
+
+CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE()
+
+);
+GO
+
+-- BOOKS
+
+CREATE TABLE Books
+(
+Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+
+Title NVARCHAR(255) NOT NULL,
+
+Description NVARCHAR(MAX) NULL,
+
+CoverImage NVARCHAR(500) NULL,
+
+CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE()
+
+
+);
+GO
+
+-- CHAPTERS
+
+CREATE TABLE Chapters
+(
+Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+BookId BIGINT NOT NULL,
+
+Title NVARCHAR(255) NOT NULL,
+
+Description NVARCHAR(MAX) NULL,
+
+OrderIndex INT NOT NULL,
+
+CONSTRAINT FK_Chapters_Books
+    FOREIGN KEY (BookId)
+    REFERENCES Books(Id)
+
+
+);
+GO
+
+ -- LESSONS
+
+CREATE TABLE Lessons
+(
+Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+ChapterId BIGINT NOT NULL,
+
+Title NVARCHAR(255) NOT NULL,
+
+OrderIndex INT NOT NULL,
+
+EstimatedMinutes INT DEFAULT 15,
+
+CONSTRAINT FK_Lessons_Chapters
+    FOREIGN KEY (ChapterId)
+    REFERENCES Chapters(Id)
+
+);
+GO
+
+-- LESSON CONTENTS
+
+CREATE TABLE LessonContents
+(
+Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+LessonId BIGINT NOT NULL,
+
+ContentBody NVARCHAR(MAX) NOT NULL,
+
+ContentType NVARCHAR(50) NOT NULL,
+
+DisplayOrder INT NOT NULL,
+
+CONSTRAINT FK_LessonContents_Lessons
+    FOREIGN KEY (LessonId)
+    REFERENCES Lessons(Id)
+
+);
+GO
+
+-- QUESTIONS
+
+CREATE TABLE Questions
+(
+Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+LessonId BIGINT NOT NULL,
+
+QuestionText NVARCHAR(MAX) NOT NULL,
+
+OptionA NVARCHAR(500) NOT NULL,
+
+OptionB NVARCHAR(500) NOT NULL,
+
+OptionC NVARCHAR(500) NOT NULL,
+
+OptionD NVARCHAR(500) NOT NULL,
+
+CorrectOption CHAR(1) NOT NULL,
+
+Explanation NVARCHAR(MAX) NULL,
+
+CONSTRAINT FK_Questions_Lessons
+    FOREIGN KEY (LessonId)
+    REFERENCES Lessons(Id)
+
+);
+GO
+
+ -- PROGRESS
+
+CREATE TABLE Progress
+(
+Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+UserId BIGINT NOT NULL,
+
+LessonId BIGINT NOT NULL,
+
+IsCompleted BIT NOT NULL DEFAULT 0,
+
+QuizScore DECIMAL(5,2) DEFAULT 0,
+
+CompletionPercent DECIMAL(5,2) DEFAULT 0,
+
+UpdatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+
+CONSTRAINT FK_Progress_Users
+    FOREIGN KEY (UserId)
+    REFERENCES Users(Id),
+
+CONSTRAINT FK_Progress_Lessons
+    FOREIGN KEY (LessonId)
+    REFERENCES Lessons(Id)
+
+);
+GO
+
+
+ -- USER BADGES
+
+CREATE TABLE UserBadges
+(
+Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+
+
+UserId BIGINT NOT NULL,
+
+BadgeId BIGINT NOT NULL,
+
+EarnedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+
+CONSTRAINT FK_UserBadges_Users
+    FOREIGN KEY (UserId)
+    REFERENCES Users(Id),
+
+CONSTRAINT FK_UserBadges_Badges
+    FOREIGN KEY (BadgeId)
+    REFERENCES Badges(Id),
+
+CONSTRAINT UQ_UserBadges
+    UNIQUE(UserId, BadgeId)
+
+
+);
+GO
+
+
+ -- INDEXES
+
+CREATE INDEX IX_Chapters_BookId
+ON Chapters(BookId);
+
+CREATE INDEX IX_Lessons_ChapterId
+ON Lessons(ChapterId);
+
+CREATE INDEX IX_LessonContents_LessonId
+ON LessonContents(LessonId);
+
+CREATE INDEX IX_Questions_LessonId
+ON Questions(LessonId);
+
+CREATE INDEX IX_Progress_UserId
+ON Progress(UserId);
+
+CREATE INDEX IX_Progress_LessonId
+ON Progress(LessonId);
+
+CREATE INDEX IX_UserBadges_UserId
+ON UserBadges(UserId);
+
+CREATE INDEX IX_UserBadges_BadgeId
+ON UserBadges(BadgeId);
+GO

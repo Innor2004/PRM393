@@ -168,4 +168,11 @@ class LessonProvider extends ChangeNotifier {
     if (lessons == null || lessons.isEmpty) return false;
     return lessons.every((l) => completedLessonIds.contains(l.id));
   }
+
+  String getChapterProgressStr(int chapterId, List<int> completedLessonIds) {
+    final lessons = _chapterLessons[chapterId];
+    if (lessons == null || lessons.isEmpty) return '0/0';
+    final completed = lessons.where((l) => completedLessonIds.contains(l.id)).length;
+    return '$completed/${lessons.length}';
+  }
 }

@@ -14,6 +14,8 @@ import 'screens/home/home_screen.dart';
 import 'screens/home/chapter_lessons_screen.dart';
 import 'screens/lesson/lesson_detail_screen.dart';
 import 'screens/quiz/quiz_screen.dart';
+import 'screens/quiz/quiz_history_screen.dart';
+import 'screens/quiz/quiz_history_detail_screen.dart';
 import 'screens/admin/admin_dashboard.dart';
 
 void main() {
@@ -82,6 +84,18 @@ class MyApp extends StatelessWidget {
                   return MaterialPageRoute(
                     settings: settings,
                     builder: (_) => QuizScreen(lesson: lesson),
+                  );
+                case '/quiz-history':
+                  final lesson = settings.arguments as dynamic;
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => QuizHistoryScreen(lesson: lesson),
+                  );
+                case '/quiz-history-detail':
+                  final attempt = settings.arguments as dynamic;
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => QuizHistoryDetailScreen(attempt: attempt),
                   );
                 case '/admin':
                   return MaterialPageRoute(

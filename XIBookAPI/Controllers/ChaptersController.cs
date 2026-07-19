@@ -44,6 +44,7 @@ public class ChaptersController : ControllerBase
                 l.Title,
                 l.OrderIndex,
                 l.EstimatedMinutes,
+                l.DifficultyStars,
                 l.ContentBody
             })
             .ToListAsync();

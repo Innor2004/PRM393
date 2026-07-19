@@ -149,6 +149,13 @@ class _ChapterLessonsScreenState extends State<ChapterLessonsScreen> {
                           style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textMain)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text('Độ khó: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                          Text('⭐' * lesson.difficultyStars, style: TextStyle(color: AppColors.warning, fontSize: 10)),
+                        ],
+                      ),
                       const SizedBox(height: 6),
                       Row(
                         children: [

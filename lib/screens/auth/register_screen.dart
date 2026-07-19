@@ -149,7 +149,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
+                      Consumer<AuthProvider>(
+                        builder: (context, auth, _) {
+                          if (auth.error != null) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                      color: Colors.red.withValues(alpha: 0.3)),
+                                ),
+                                child: Row(children: [
+                                  const Icon(Icons.error_outline,
+                                      color: Colors.red, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(auth.error!,
+                                        style: const TextStyle(
+                                            color: Colors.red, fontSize: 13)),
+                                  ),
+                                ]),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      const SizedBox(height: 4),
                       Consumer<AuthProvider>(
                         builder: (context, auth, _) {
                           if (auth.isLoading) {
@@ -170,6 +201,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             );
                           }
+>>>>>>> origin/main
                           return Container(
                             width: double.infinity,
                             height: 48,
