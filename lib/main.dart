@@ -1,5 +1,7 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'providers/auth_provider.dart';
 import 'providers/lesson_provider.dart';
 import 'providers/progress_provider.dart';
@@ -17,6 +19,11 @@ import 'screens/quiz/quiz_history_detail_screen.dart';
 import 'screens/admin/admin_dashboard.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isWindows || Platform.isLinux) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
   runApp(const MyApp());
 }
 

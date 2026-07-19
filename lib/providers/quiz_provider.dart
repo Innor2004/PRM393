@@ -2,10 +2,13 @@ import 'package:flutter/foundation.dart';
 import '../models/question.dart';
 import '../models/quiz_attempt.dart';
 import '../services/backend_service.dart';
+import '../services/offline_database_service.dart';
 
 class QuizProvider extends ChangeNotifier {
   final BackendService _backend = BackendService();
+  final OfflineDatabaseService _offlineDb = OfflineDatabaseService();
 
+  int _userId = 1;
   List<Question> _questions = [];
   int _currentIndex = 0;
   String? _selectedAnswer;
@@ -23,17 +26,37 @@ class QuizProvider extends ChangeNotifier {
   int get correctCount => _correctCount;
   double get score => _questions.isEmpty ? 0 : (_correctCount / _questions.length) * 10;
 
+  void setUserId(int id) {
+    _userId = id;
+  }
+
   Future<void> loadQuestions(int lessonId) async {
     _isLoading = true;
     _reset();
     notifyListeners();
 
+    final isSupportedDb = !kIsWeb;
+
     try {
       final data = await _backend.getList('/lessons/$lessonId/questions');
       _questions = data.map((j) => Question.fromJson(Map<String, dynamic>.from(j))).toList();
+      // Cache questions locally if supported
+      if (isSupportedDb) {
+        await _offlineDb.saveQuestions(_questions);
+      }
     } catch (e) {
-      debugPrint('loadQuestions error: $e');
-      _questions = [];
+      debugPrint('loadQuestions online error: $e');
+      if (isSupportedDb) {
+        debugPrint('loading from local DB');
+        try {
+          _questions = await _offlineDb.getQuestionsForLesson(lessonId);
+        } catch (dbError) {
+          debugPrint('loadQuestions offline DB error: $dbError');
+          _questions = [];
+        }
+      } else {
+        _questions = [];
+      }
     }
 
     _isLoading = false;
@@ -78,6 +101,8 @@ class QuizProvider extends ChangeNotifier {
       'selectedOption': e.value,
     }).toList();
 
+    final isSupportedDb = !kIsWeb;
+
     try {
       final res = await _backend.post('/quiz/submit', body: {
         'lessonId': lessonId,
@@ -88,7 +113,7 @@ class QuizProvider extends ChangeNotifier {
       notifyListeners();
       return (res['score'] as num?)?.toDouble() ?? score;
     } catch (e) {
-      debugPrint('submitToBackend error: $e');
+      debugPrint('submitToBackend online error: $e, computing score locally');
       _correctCount = 0;
       for (int i = 0; i < _questions.length; i++) {
         final userAnswer = _answers[i];
@@ -97,16 +122,47 @@ class QuizProvider extends ChangeNotifier {
         }
       }
       _isSubmitted = true;
+
+      final localScore = score;
+
+      if (isSupportedDb) {
+        debugPrint('queuing sync');
+        try {
+          await _offlineDb.addPendingSync(
+            userId: _userId,
+            lessonId: lessonId,
+            type: 'quiz_submit',
+            payload: {
+              'lessonId': lessonId,
+              'answers': answers,
+            },
+          );
+          debugPrint('Successfully queued offline quiz submission for lesson $lessonId');
+        } catch (dbError) {
+          debugPrint('Failed to queue offline quiz submission: $dbError');
+        }
+      }
+
       notifyListeners();
-      return score;
+      return localScore;
     }
   }
 
   Future<bool> hasQuestions(int lessonId) async {
+    final isSupportedDb = !kIsWeb;
+
     try {
       final data = await _backend.getList('/lessons/$lessonId/questions');
       return data.isNotEmpty;
     } catch (_) {
+      if (isSupportedDb) {
+        try {
+          final localQ = await _offlineDb.getQuestionsForLesson(lessonId);
+          return localQ.isNotEmpty;
+        } catch (_) {
+          return false;
+        }
+      }
       return false;
     }
   }

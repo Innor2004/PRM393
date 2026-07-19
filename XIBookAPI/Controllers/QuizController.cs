@@ -81,7 +81,10 @@ public class QuizController : ControllerBase
             _db.Progresses.Add(progress);
         }
 
-        progress.IsCompleted = true;
+        if (score >= 5)
+        {
+            progress.IsCompleted = true;
+        }
         if (progress.QuizScore == null || (decimal)score > progress.QuizScore)
         {
             progress.QuizScore = (decimal)score;

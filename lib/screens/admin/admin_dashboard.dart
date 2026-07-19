@@ -161,7 +161,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ],
         ),
-        body: bodyContent,
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1400),
+              child: bodyContent,
+            ),
+          ),
+        ),
         bottomNavigationBar: _selectedStudent != null
             ? null
             : NavigationBar(
@@ -214,24 +222,42 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ],
                   ),
                 )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _students.length,
-                  itemBuilder: (_, i) => _buildStudentCard(_students[i]),
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth >= 750;
+                    if (isWide) {
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 4.2,
+                        ),
+                        itemCount: _students.length,
+                        itemBuilder: (_, i) => _buildStudentCard(_students[i], margin: EdgeInsets.zero),
+                      );
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _students.length,
+                      itemBuilder: (_, i) => _buildStudentCard(_students[i]),
+                    );
+                  },
                 ),
         ),
       ],
     );
   }
 
-  Widget _buildStudentCard(Map<String, dynamic> student) {
+  Widget _buildStudentCard(Map<String, dynamic> student, {EdgeInsetsGeometry? margin}) {
     final name = student['name'] as String? ?? '';
     final email = student['email'] as String? ?? '';
     final completed = (student['completedLessons'] as num?)?.toInt() ?? 0;
     final avgScore = (student['averageScore'] as num?)?.toDouble() ?? 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: margin ?? const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.bgDark.withValues(alpha: 0.6),

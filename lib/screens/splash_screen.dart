@@ -57,57 +57,67 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(gradient: AppColors.gradientSurface),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fadeAnim,
-            child: ScaleTransition(
-              scale: _scaleAnim,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      gradient: AppColors.gradientPrimary,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.4),
-                          blurRadius: 40,
-                          offset: const Offset(0, 10),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 450),
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: ScaleTransition(
+                    scale: _scaleAnim,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(28),
+                            gradient: AppColors.gradientPrimary,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.4),
+                                blurRadius: 40,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.auto_stories,
+                              size: 50, color: Colors.white),
+                        ),
+                        const SizedBox(height: 24),
+                        ShaderMask(
+                          shaderCallback: (bounds) =>
+                              AppColors.gradientAccent.createShader(bounds),
+                          child: const Text('PhysicsBook',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white)),
+                        ),
+                        const SizedBox(height: 8),
+                        Text('Ứng dụng sách điện tử thông minh',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textMuted.withValues(alpha: 0.8))),
+                        const SizedBox(height: 48),
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primary.withValues(alpha: 0.6)),
+                          ),
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.auto_stories,
-                        size: 50, color: Colors.white),
                   ),
-                  const SizedBox(height: 24),
-                  ShaderMask(
-                    shaderCallback: (bounds) =>
-                        AppColors.gradientAccent.createShader(bounds),
-                    child: const Text('PhysicsBook',
-                        style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white)),
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Ứng dụng sách điện tử thông minh',
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textMuted.withValues(alpha: 0.8))),
-                  const SizedBox(height: 48),
-                  SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.primary.withValues(alpha: 0.6)),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

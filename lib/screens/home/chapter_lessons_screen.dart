@@ -31,37 +31,70 @@ class _ChapterLessonsScreenState extends State<ChapterLessonsScreen> {
       decoration: BoxDecoration(gradient: AppColors.gradientSurface),
       child: Scaffold(
         appBar: AppBar(title: Text(widget.chapter.title)),
-        body: lessons.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.menu_book, size: 48, color: AppColors.textDim),
-                    const SizedBox(height: 16),
-                    Text('Không có bài học nào',
-                        style: TextStyle(color: AppColors.textMuted)),
-                  ],
-                ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: lessons.length,
-                itemBuilder: (context, index) {
-                  final lesson = lessons[index];
-                  final completed = progressProv.isLessonCompleted(lesson.id);
-                  final hasQuiz = completed ? progressProv.hasLessonQuiz(lesson.id) : true;
-                  final score = progressProv.getLessonScore(lesson.id);
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: lessons.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.menu_book, size: 48, color: AppColors.textDim),
+                          const SizedBox(height: 16),
+                          Text('Không có bài học nào',
+                              style: TextStyle(color: AppColors.textMuted)),
+                        ],
+                      ),
+                    )
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth >= 650;
+                        if (isWide) {
+                          return GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: 3.6,
+                            ),
+                            itemCount: lessons.length,
+                            itemBuilder: (context, index) {
+                              final lesson = lessons[index];
+                              final completed = progressProv.isLessonCompleted(lesson.id);
+                              final hasQuiz = completed ? progressProv.hasLessonQuiz(lesson.id) : true;
+                              final score = progressProv.getLessonScore(lesson.id);
 
-                  return _buildLessonCard(lesson, completed, score, hasQuiz: hasQuiz);
-                },
-              ),
+                              return _buildLessonCard(lesson, completed, score, hasQuiz: hasQuiz, margin: EdgeInsets.zero);
+                            },
+                          );
+                        }
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: lessons.length,
+                          itemBuilder: (context, index) {
+                            final lesson = lessons[index];
+                            final completed = progressProv.isLessonCompleted(lesson.id);
+                            final hasQuiz = completed ? progressProv.hasLessonQuiz(lesson.id) : true;
+                            final score = progressProv.getLessonScore(lesson.id);
+
+                            return _buildLessonCard(lesson, completed, score, hasQuiz: hasQuiz);
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildLessonCard(dynamic lesson, bool completed, double score, {bool hasQuiz = true}) {
+  Widget _buildLessonCard(dynamic lesson, bool completed, double score, {bool hasQuiz = true, EdgeInsetsGeometry? margin}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: margin ?? const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.bgDark.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),

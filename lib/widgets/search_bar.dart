@@ -96,37 +96,44 @@ class LessonSearchDelegate extends SearchDelegate<Lesson?> {
 
         return Container(
           color: AppColors.bgDarker,
-          child: ListView.builder(
-            itemCount: results.length,
-            itemBuilder: (_, i) {
-              final lesson = results[i];
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.bgDark.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.glassBorder),
-                ),
-                child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: results.length,
+                itemBuilder: (_, i) {
+                  final lesson = results[i];
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      gradient: AppColors.gradientPrimary,
+                      color: AppColors.bgDark.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.glassBorder),
                     ),
-                    child: const Icon(Icons.menu_book,
-                        color: Colors.white, size: 20),
-                  ),
-                  title: Text(lesson.title,
-                      style: TextStyle(color: AppColors.textMain)),
-                  subtitle: Text('Bài ${lesson.orderIndex} - ${lesson.estimatedMinutes} phút',
-                      style: TextStyle(color: AppColors.textMuted)),
-                  trailing: Icon(Icons.chevron_right,
-                      color: AppColors.textMuted),
-                  onTap: () => close(context, lesson),
-                ),
-              );
-            },
+                    child: ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: AppColors.gradientPrimary,
+                        ),
+                        child: const Icon(Icons.menu_book,
+                            color: Colors.white, size: 20),
+                      ),
+                      title: Text(lesson.title,
+                          style: TextStyle(color: AppColors.textMain)),
+                      subtitle: Text('Bài ${lesson.orderIndex} - ${lesson.estimatedMinutes} phút',
+                          style: TextStyle(color: AppColors.textMuted)),
+                      trailing: Icon(Icons.chevron_right,
+                          color: AppColors.textMuted),
+                      onTap: () => close(context, lesson),
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
         );
       },

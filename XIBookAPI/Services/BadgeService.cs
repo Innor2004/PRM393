@@ -29,31 +29,7 @@ public class BadgeService
             .Distinct()
             .ToListAsync();
 
-        var noQuizLessonIds = (await _db.Lessons
-            .Select(l => l.Id)
-            .ToListAsync())
-            .Except(lessonIdsWithQuestions)
-            .ToList();
 
-        foreach (var lessonId in noQuizLessonIds)
-        {
-            if (!completedLessonIds.Contains(lessonId))
-            {
-                var progress = new Progress
-                {
-                    UserId = userId,
-                    LessonId = lessonId,
-                    IsCompleted = true,
-                    QuizScore = null,
-                    CompletionPercent = 100,
-                    UpdatedAt = DateTime.UtcNow
-                };
-                _db.Progresses.Add(progress);
-            }
-        }
-
-        if (noQuizLessonIds.Any())
-            await _db.SaveChangesAsync();
 
         var allCompletedCount = await _db.Progresses
             .Where(p => p.UserId == userId && p.IsCompleted)
