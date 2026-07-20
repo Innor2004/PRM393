@@ -63,9 +63,12 @@ class LessonProvider extends ChangeNotifier {
     try {
       final data = await _backend.getList('/chapters/$chapterId/lessons');
       _currentLessons = data.map((j) => Lesson.fromJson(Map<String, dynamic>.from(j))).toList();
-      // Cache lessons locally if supported
       if (isSupportedDb) {
-        await _offlineDb.saveLessons(_currentLessons);
+        try {
+          await _offlineDb.saveLessons(_currentLessons);
+        } catch (cacheError) {
+          debugPrint('loadLessons cache error: $cacheError');
+        }
       }
     } catch (e) {
       debugPrint('loadLessons online error: $e');
@@ -92,9 +95,12 @@ class LessonProvider extends ChangeNotifier {
     try {
       final data = await _backend.getOne('/lessons/$lessonId');
       _currentLesson = Lesson.fromJson(Map<String, dynamic>.from(data));
-      // Cache single lesson locally if supported
       if (isSupportedDb) {
-        await _offlineDb.saveLessons([_currentLesson!]);
+        try {
+          await _offlineDb.saveLessons([_currentLesson!]);
+        } catch (cacheError) {
+          debugPrint('loadLesson cache error: $cacheError');
+        }
       }
     } catch (e) {
       debugPrint('loadLesson online error: $e');
@@ -126,11 +132,12 @@ class LessonProvider extends ChangeNotifier {
         for (final l in lessons) {
           _lessonMap[l.id] = l;
         }
-        // Cache all lessons locally if supported
         if (isSupportedDb) {
-          await _offlineDb.saveLessons(lessons);
-
-          // Pre-fetch and cache questions for all loaded lessons in the background
+          try {
+            await _offlineDb.saveLessons(lessons);
+          } catch (cacheError) {
+            debugPrint('cache lessons error for chapter ${c.id}: $cacheError');
+          }
           for (final l in lessons) {
             try {
               final qData = await _backend.getList('/lessons/${l.id}/questions');

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/chapter.dart';
@@ -14,6 +15,7 @@ class OfflineDatabaseService {
   Database? _database;
 
   Future<Database> get database async {
+    if (kIsWeb) throw UnsupportedError('Offline database is not supported on web');
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
@@ -25,8 +27,9 @@ class OfflineDatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -48,6 +51,7 @@ class OfflineDatabaseService {
         title TEXT,
         orderIndex INTEGER,
         estimatedMinutes INTEGER,
+        difficultyStars INTEGER DEFAULT 1,
         contentBody TEXT
       )
     ''');
@@ -88,6 +92,12 @@ class OfflineDatabaseService {
         createdAt TEXT
       )
     ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE lessons ADD COLUMN difficultyStars INTEGER DEFAULT 1');
+    }
   }
 
   // Chapters CRUD

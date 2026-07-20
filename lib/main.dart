@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -20,7 +20,7 @@ import 'screens/admin/admin_dashboard.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  if (Platform.isWindows || Platform.isLinux) {
+  if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux)) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
