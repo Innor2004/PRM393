@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<Progress> Progresses => Set<Progress>();
     public DbSet<Badge> Badges => Set<Badge>();
     public DbSet<UserBadge> UserBadges => Set<UserBadge>();
+    public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();
+    public DbSet<QuizAttemptDetail> QuizAttemptDetails => Set<QuizAttemptDetail>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,7 +27,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Progress>(e =>
         {
-            e.ToTable("Progress");
+            e.ToTable("Progresses");
             e.HasIndex(p => p.UserId);
             e.HasIndex(p => p.LessonId);
             e.HasOne(p => p.User).WithMany(u => u.Progresses).HasForeignKey(p => p.UserId);
@@ -55,6 +57,24 @@ public class AppDbContext : DbContext
         {
             e.HasOne(q => q.Lesson).WithMany(l => l.Questions).HasForeignKey(q => q.LessonId);
             e.HasIndex(q => q.LessonId);
+        });
+
+        modelBuilder.Entity<QuizAttempt>(e =>
+        {
+            e.ToTable("QuizAttempt");
+            e.HasIndex(qa => qa.UserId);
+            e.HasIndex(qa => qa.LessonId);
+            e.HasOne(qa => qa.User).WithMany().HasForeignKey(qa => qa.UserId);
+            e.HasOne(qa => qa.Lesson).WithMany().HasForeignKey(qa => qa.LessonId);
+        });
+
+        modelBuilder.Entity<QuizAttemptDetail>(e =>
+        {
+            e.ToTable("QuizAttemptDetail");
+            e.HasIndex(d => d.QuizAttemptId);
+            e.HasIndex(d => d.QuestionId);
+            e.HasOne(d => d.QuizAttempt).WithMany(qa => qa.Details).HasForeignKey(d => d.QuizAttemptId);
+            e.HasOne(d => d.Question).WithMany().HasForeignKey(d => d.QuestionId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -30,10 +30,15 @@ class ProfileScreen extends StatelessWidget {
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 850),
+                child: Column(
+                  children: [
               const SizedBox(height: 20),
               Stack(
                 clipBehavior: Clip.none,
@@ -203,7 +208,10 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  ),
+),
+);
   }
 
   Widget _buildGlassCard({required Widget child, EdgeInsetsGeometry? padding}) {

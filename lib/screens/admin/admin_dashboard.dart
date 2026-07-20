@@ -41,6 +41,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     await Future.wait([_loadChapters(), _loadStats(), _loadStudents()]);
+    if (!mounted) return;
     setState(() => _isLoading = false);
   }
 
@@ -59,9 +60,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     try {
       final data = await _backend.getList('/chapters');
       _chapters = data.map((j) => Chapter.fromJson(Map<String, dynamic>.from(j))).toList();
-      for (final ch in _chapters) {
-        await _loadLessonsForChapter(ch.id);
-      }
+      await Future.wait(_chapters.map((ch) => _loadLessonsForChapter(ch.id)));
     } catch (e) {
       debugPrint('Admin load chapters error: $e');
     }
@@ -71,9 +70,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     try {
       final data = await _backend.getList('/chapters/$chapterId/lessons');
       _lessons[chapterId] = data.map((j) => Lesson.fromJson(Map<String, dynamic>.from(j))).toList();
-      for (final l in _lessons[chapterId]!) {
-        await _loadQuestionsForLesson(l.id);
-      }
     } catch (e) {
       debugPrint('Admin load lessons error: $e');
     }
@@ -165,7 +161,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ],
         ),
-        body: bodyContent,
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1400),
+              child: bodyContent,
+            ),
+          ),
+        ),
         bottomNavigationBar: _selectedStudent != null
             ? null
             : NavigationBar(
@@ -218,24 +222,42 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ],
                   ),
                 )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _students.length,
-                  itemBuilder: (_, i) => _buildStudentCard(_students[i]),
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth >= 750;
+                    if (isWide) {
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 4.2,
+                        ),
+                        itemCount: _students.length,
+                        itemBuilder: (_, i) => _buildStudentCard(_students[i], margin: EdgeInsets.zero),
+                      );
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _students.length,
+                      itemBuilder: (_, i) => _buildStudentCard(_students[i]),
+                    );
+                  },
                 ),
         ),
       ],
     );
   }
 
-  Widget _buildStudentCard(Map<String, dynamic> student) {
+  Widget _buildStudentCard(Map<String, dynamic> student, {EdgeInsetsGeometry? margin}) {
     final name = student['name'] as String? ?? '';
     final email = student['email'] as String? ?? '';
     final completed = (student['completedLessons'] as num?)?.toInt() ?? 0;
     final avgScore = (student['averageScore'] as num?)?.toDouble() ?? 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: margin ?? const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.bgDark.withValues(alpha: 0.6),
@@ -297,13 +319,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
     try {
       final id = student['id'] as num;
       final data = await _backend.getOne('/admin/users/$id/progress');
+      if (!mounted) return;
       setState(() {
         _selectedStudent = student;
         _studentProgress = data;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       debugPrint('Load student progress error: $e');
     }
   }
@@ -1013,11 +1036,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Future<void> _refreshChapter(int chapterId) async {
     try {
       final data = await _backend.getList('/chapters/$chapterId/lessons');
-      _lessons[chapterId] = data.map((j) => Lesson.fromJson(Map<String, dynamic>.from(j))).toList();
-      for (final l in _lessons[chapterId]!) {
-        final qData = await _backend.getList('/lessons/${l.id}/questions');
-        _questions[l.id] = qData.map((j) => Question.fromJson(Map<String, dynamic>.from(j))).toList();
-      }
+      if (!mounted) return;
+      setState(() {
+        _lessons[chapterId] = data.map((j) => Lesson.fromJson(Map<String, dynamic>.from(j))).toList();
+      });
     } catch (_) {}
   }
 
@@ -1071,6 +1093,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 debugPrint('Chapter save error: $e');
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: Text(chapter != null ? 'Lưu' : 'Thêm'),
           ),
         ],
@@ -1109,69 +1135,98 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final titleCtrl = TextEditingController(text: lesson?.title ?? '');
     final minCtrl = TextEditingController(text: '${lesson?.estimatedMinutes ?? 15}');
     final contentCtrl = TextEditingController(text: lesson?.contentBody ?? '');
+    int stars = lesson?.difficultyStars ?? 1;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(lesson != null ? 'Sửa bài học' : 'Thêm bài học'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleCtrl,
-                decoration: const InputDecoration(labelText: 'Tên bài học'),
-                style: TextStyle(color: AppColors.textMain),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            title: Text(lesson != null ? 'Sửa bài học' : 'Thêm bài học'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleCtrl,
+                    decoration: const InputDecoration(labelText: 'Tên bài học'),
+                    style: TextStyle(color: AppColors.textMain),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: minCtrl,
+                    decoration: const InputDecoration(labelText: 'Số phút'),
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: AppColors.textMain),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    value: stars,
+                    decoration: const InputDecoration(labelText: 'Độ khó (Sao)'),
+                    dropdownColor: AppColors.bgDark,
+                    items: [1, 2, 3, 4, 5].map((s) {
+                      return DropdownMenuItem<int>(
+                        value: s,
+                        child: Text('⭐' * s, style: TextStyle(color: AppColors.warning)),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setStateDialog(() => stars = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: contentCtrl,
+                    decoration: const InputDecoration(labelText: 'Nội dung (Markdown)'),
+                    maxLines: 5,
+                    style: TextStyle(color: AppColors.textMain),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: minCtrl,
-                decoration: const InputDecoration(labelText: 'Số phút'),
-                keyboardType: TextInputType.number,
-                style: TextStyle(color: AppColors.textMain),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: contentCtrl,
-                decoration: const InputDecoration(labelText: 'Nội dung (Markdown)'),
-                maxLines: 5,
-                style: TextStyle(color: AppColors.textMain),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleCtrl.text.trim().isEmpty) return;
+                  final minutes = int.tryParse(minCtrl.text.trim()) ?? 15;
+                  try {
+                    if (lesson != null) {
+                      await _backend.put('/admin/lessons/${lesson.id}', body: {
+                        'title': titleCtrl.text.trim(),
+                        'estimatedMinutes': minutes,
+                        'difficultyStars': stars,
+                        'contentBody': contentCtrl.text.trim().isEmpty ? null : contentCtrl.text.trim(),
+                      });
+                    } else {
+                      final existing = _lessons[chapterId] ?? [];
+                      await _backend.post('/admin/lessons', body: {
+                        'chapterId': chapterId,
+                        'title': titleCtrl.text.trim(),
+                        'orderIndex': existing.length + 1,
+                        'estimatedMinutes': minutes,
+                        'difficultyStars': stars,
+                        'contentBody': contentCtrl.text.trim().isEmpty ? null : contentCtrl.text.trim(),
+                      });
+                    }
+                    Navigator.pop(ctx);
+                    await _refreshChapter(chapterId);
+                    if (mounted) setState(() {});
+                  } catch (e) {
+                    debugPrint('Lesson save error: $e');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(lesson != null ? 'Lưu' : 'Thêm'),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
-          ElevatedButton(
-            onPressed: () async {
-              if (titleCtrl.text.trim().isEmpty) return;
-              final minutes = int.tryParse(minCtrl.text.trim()) ?? 15;
-              try {
-                if (lesson != null) {
-                  await _backend.put('/admin/lessons/${lesson.id}', body: {
-                    'title': titleCtrl.text.trim(),
-                    'estimatedMinutes': minutes,
-                    'contentBody': contentCtrl.text.trim().isEmpty ? null : contentCtrl.text.trim(),
-                  });
-                } else {
-                  final existing = _lessons[chapterId] ?? [];
-                  await _backend.post('/admin/lessons', body: {
-                    'chapterId': chapterId,
-                    'title': titleCtrl.text.trim(),
-                    'orderIndex': existing.length + 1,
-                    'estimatedMinutes': minutes,
-                    'contentBody': contentCtrl.text.trim().isEmpty ? null : contentCtrl.text.trim(),
-                  });
-                }
-                Navigator.pop(ctx);
-                await _refreshChapter(chapterId);
-                setState(() {});
-              } catch (e) {
-                debugPrint('Lesson save error: $e');
-              }
-            },
-            child: Text(lesson != null ? 'Lưu' : 'Thêm'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -1239,7 +1294,7 @@ class _QuestionManagerSheet extends StatefulWidget {
 }
 
 class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
-  late List<Question> questions;
+  List<Question>? questions;
 
   @override
   void initState() {
@@ -1301,25 +1356,27 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
           ),
           Divider(color: AppColors.glassBorder),
           Expanded(
-            child: questions.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.quiz_outlined, size: 48, color: AppColors.textDim),
-                        const SizedBox(height: 8),
-                        Text('Chưa có câu hỏi nào', style: TextStyle(color: AppColors.textMuted)),
-                        const SizedBox(height: 4),
-                        TextButton(onPressed: () => _showQuestionDialog(), child: const Text('Thêm câu hỏi đầu tiên')),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    controller: scrollCtrl,
-                    padding: const EdgeInsets.all(12),
-                    itemCount: questions.length,
-                    itemBuilder: (_, i) => _buildQuestionCard(questions[i]),
-                  ),
+            child: questions == null
+                ? const Center(child: CircularProgressIndicator())
+                : questions!.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.quiz_outlined, size: 48, color: AppColors.textDim),
+                            const SizedBox(height: 8),
+                            Text('Chưa có câu hỏi nào', style: TextStyle(color: AppColors.textMuted)),
+                            const SizedBox(height: 4),
+                            TextButton(onPressed: () => _showQuestionDialog(), child: const Text('Thêm câu hỏi đầu tiên')),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollCtrl,
+                        padding: const EdgeInsets.all(12),
+                        itemCount: questions!.length,
+                        itemBuilder: (_, i) => _buildQuestionCard(questions![i]),
+                      ),
           ),
         ],
       ),
@@ -1465,7 +1522,7 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
                     style: TextStyle(color: AppColors.textMain)),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: correctOpt,
+                  value: correctOpt,
                   dropdownColor: AppColors.bgDark,
                   decoration: const InputDecoration(labelText: 'Đáp án đúng'),
                   items: ['A', 'B', 'C', 'D']
@@ -1514,6 +1571,10 @@ class _QuestionManagerSheetState extends State<_QuestionManagerSheet> {
                   debugPrint('Question save error: $e');
                 }
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
               child: Text(question != null ? 'Lưu' : 'Thêm'),
             ),
           ],
