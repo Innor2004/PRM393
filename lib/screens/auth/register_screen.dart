@@ -201,7 +201,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             );
                           }
->>>>>>> origin/main
                           return Container(
                             width: double.infinity,
                             height: 48,
