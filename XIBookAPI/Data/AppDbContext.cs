@@ -27,7 +27,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Progress>(e =>
         {
-            e.ToTable("Progresses");
+            e.ToTable("Progress");
             e.HasIndex(p => p.UserId);
             e.HasIndex(p => p.LessonId);
             e.HasOne(p => p.User).WithMany(u => u.Progresses).HasForeignKey(p => p.UserId);
