@@ -368,6 +368,9 @@ class _QuizScreenState extends State<QuizScreen> {
               Navigator.pop(ctx);
               _timer?.cancel();
               await quiz.submitToBackend(widget.lesson.id);
+              if (context.mounted) {
+                await context.read<ProgressProvider>().updatePendingCount();
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -523,8 +526,8 @@ class _QuizScreenState extends State<QuizScreen> {
           const SizedBox(height: 16),
           _buildGradientButton(
             onPressed: () {
+              progressProv.markLessonCompleted(widget.lesson.id, score: score);
               if (passed) {
-                progressProv.markLessonCompleted(widget.lesson.id, score: score);
                 Navigator.of(context).popUntil(ModalRoute.withName('/chapter-lessons'));
               } else {
                 Navigator.of(context).pop();

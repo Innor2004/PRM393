@@ -9,8 +9,7 @@ public static class DbInitializer
 {
     public static void Initialize(AppDbContext db)
     {
-        // Recreate the database to ensure all tables exist
-        db.Database.EnsureDeleted(); // <-- Đã thêm dòng này để reset DB
+        // Ensure database is created without wiping data on restart
         db.Database.EnsureCreated();
 
         // Seed Users matching the Flutter app's mock/demo credentials

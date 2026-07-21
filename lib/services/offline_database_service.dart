@@ -182,15 +182,18 @@ class OfflineDatabaseService {
   }
 
   // Progress CRUD
-  Future<void> saveProgressList(List<Progress> progressList) async {
+  Future<void> saveProgressList(int userId, List<Progress> progressList) async {
     final db = await database;
+    await db.delete('progress', where: 'userId = ?', whereArgs: [userId]);
     final batch = db.batch();
-    for (final progress in progressList) {
+    for (int i = 0; i < progressList.length; i++) {
+      final progress = progressList[i];
+      final recordId = (progress.id != 0) ? progress.id : (progress.lessonId != 0 ? progress.lessonId : (i + 1));
       batch.insert(
         'progress',
         {
-          'id': progress.id,
-          'userId': progress.userId,
+          'id': recordId,
+          'userId': userId,
           'lessonId': progress.lessonId,
           'isCompleted': progress.isCompleted ? 1 : 0,
           'quizScore': progress.quizScore,
@@ -225,10 +228,11 @@ class OfflineDatabaseService {
 
   Future<void> saveSingleProgress(Progress progress) async {
     final db = await database;
+    final recordId = (progress.id != 0) ? progress.id : progress.lessonId;
     await db.insert(
       'progress',
       {
-        'id': progress.id,
+        'id': recordId,
         'userId': progress.userId,
         'lessonId': progress.lessonId,
         'isCompleted': progress.isCompleted ? 1 : 0,

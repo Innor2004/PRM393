@@ -105,7 +105,7 @@ class BackendService {
       final response = await http
           .get(url)
           .timeout(
-        const Duration(seconds: 5),
+        const Duration(seconds: 2),
       );
 
       debugPrint(

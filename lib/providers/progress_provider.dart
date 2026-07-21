@@ -55,7 +55,7 @@ class ProgressProvider extends ChangeNotifier {
 
       if (isSupportedDb) {
         // Cache progress locally
-        await _offlineDb.saveProgressList(_progressList);
+        await _offlineDb.saveProgressList(_userId, _progressList);
         await updatePendingCount();
       }
       notifyListeners();
@@ -120,7 +120,7 @@ class ProgressProvider extends ChangeNotifier {
       id: DateTime.now().millisecondsSinceEpoch,
       userId: _userId,
       lessonId: lessonId,
-      isCompleted: true,
+      isCompleted: score == null || score >= 5,
       quizScore: bestScore,
       completionPercent: bestScore != null
           ? (bestScore >= 5 ? 100 : bestScore * 10)

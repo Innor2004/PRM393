@@ -17,20 +17,24 @@ class Progress {
     DateTime? updatedAt,
   }) : updatedAt = updatedAt ?? DateTime.now();
 
-  factory Progress.fromJson(Map<String, dynamic> json) => Progress(
-        id: json['id'] as int? ?? DateTime.now().millisecondsSinceEpoch,
-        userId: json['userId'] as int? ?? json['user_id'] as int? ?? 1,
-        lessonId: json['lessonId'] as int? ?? json['lesson_id'] as int,
-        isCompleted: json['isCompleted'] as bool? ?? json['is_completed'] as bool? ?? false,
-        quizScore: (json['quizScore'] as num?)?.toDouble() ?? (json['quiz_score'] as num?)?.toDouble(),
-        completionPercent:
-            (json['completionPercent'] as num?)?.toDouble() ?? (json['completion_percent'] as num?)?.toDouble() ?? 0,
-        updatedAt: json['updatedAt'] != null
-            ? DateTime.parse(json['updatedAt'] as String)
-            : json['updated_at'] != null
-                ? DateTime.parse(json['updated_at'] as String)
-                : DateTime.now(),
-      );
+  factory Progress.fromJson(Map<String, dynamic> json) {
+    final lessonId = (json['lessonId'] as num?)?.toInt() ?? (json['lesson_id'] as num?)?.toInt() ?? 0;
+    final id = (json['id'] as num?)?.toInt() ?? (json['id'] as num?)?.toInt();
+    return Progress(
+      id: (id != null && id != 0) ? id : (lessonId != 0 ? lessonId : DateTime.now().microsecondsSinceEpoch),
+      userId: (json['userId'] as num?)?.toInt() ?? (json['user_id'] as num?)?.toInt() ?? 1,
+      lessonId: lessonId,
+      isCompleted: json['isCompleted'] as bool? ?? json['is_completed'] as bool? ?? false,
+      quizScore: (json['quizScore'] as num?)?.toDouble() ?? (json['quiz_score'] as num?)?.toDouble(),
+      completionPercent:
+          (json['completionPercent'] as num?)?.toDouble() ?? (json['completion_percent'] as num?)?.toDouble() ?? 0,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : json['updated_at'] != null
+              ? DateTime.parse(json['updated_at'] as String)
+              : DateTime.now(),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,

@@ -33,6 +33,8 @@ public class ProgressController : ControllerBase
             .Where(p => p.UserId == userId)
             .Select(p => new
             {
+                p.Id,
+                p.UserId,
                 p.LessonId,
                 p.IsCompleted,
                 p.QuizScore,

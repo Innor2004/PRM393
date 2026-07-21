@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -23,11 +24,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   bool _isOnline = false;
   bool _isSyncing = false;
+  Timer? _connectivityTimer;
 
   @override
   void initState() {
     super.initState();
     _checkConnection();
+    _connectivityTimer = Timer.periodic(const Duration(seconds: 3), (_) => _checkConnection());
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final auth = context.read<AuthProvider>();
       final lessonProv = context.read<LessonProvider>();
@@ -39,20 +42,34 @@ class _HomeScreenState extends State<HomeScreen> {
       lessonProv.loadAllLessons(lessonProv.chapters);
       
       progressProv.setUserId(auth.user?.id ?? 1);
-      await progressProv.loadProgress();
-
       if (_isOnline) {
         await progressProv.syncPendingData();
+      } else {
+        await progressProv.loadProgress();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _connectivityTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkConnection() async {
     final online = await BackendService().checkHealth();
     if (mounted) {
-      setState(() {
-        _isOnline = online;
-      });
+      if (_isOnline != online) {
+        setState(() {
+          _isOnline = online;
+        });
+        final progressProv = context.read<ProgressProvider>();
+        if (online) {
+          progressProv.syncPendingData();
+        } else {
+          progressProv.loadProgress();
+        }
+      }
     }
   }
 
@@ -413,7 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            'Chưa sync: ${progress.pendingCount}',
+                            'Chưa đồng bộ: ${progress.pendingCount}',
                             style: TextStyle(color: AppColors.warning, fontSize: 11, fontWeight: FontWeight.bold),
                           ),
                         ),
