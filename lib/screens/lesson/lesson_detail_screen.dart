@@ -87,35 +87,47 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
           ],
         ),
         body: SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 880),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildInfoCard(),
-                    const SizedBox(height: 20),
-                    _buildContent(context, widget.lesson.contentBody ?? ''),
-                    if (isNewtonSecondLaw) ...[
-                      const SizedBox(height: 24),
-                      const NewtonSecondLawLab(),
-                    ] else if (labType != null) ...[
-                      const SizedBox(height: 24),
-                      InteractiveLab(formulaType: labType),
-                    ],
-                    const SizedBox(height: 24),
-                    _buildQuizButton(),
-                    if (_hasQuestions == true) ...[
-                      const SizedBox(height: 12),
-                      _buildHistoryButton(),
-                    ],
-                    const SizedBox(height: 24),
-                  ],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoCard(),
+                const SizedBox(height: 20),
+                _buildContent(context, widget.lesson.contentBody ?? ''),
+                if (isNewtonSecondLaw) ...[
+                  const SizedBox(height: 24),
+                  const NewtonSecondLawLab(),
+                ] else if (labType != null) ...[
+                  const SizedBox(height: 24),
+                  InteractiveLab(formulaType: labType),
+                ],
+                const SizedBox(height: 24),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth >= 600;
+                    if (isWide && _hasQuestions == true) {
+                      return Row(
+                        children: [
+                          Expanded(child: _buildQuizButton()),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildHistoryButton()),
+                        ],
+                      );
+                    }
+                    return Column(
+                      children: [
+                        _buildQuizButton(),
+                        if (_hasQuestions == true) ...[
+                          const SizedBox(height: 12),
+                          _buildHistoryButton(),
+                        ],
+                      ],
+                    );
+                  },
                 ),
-              ),
+                const SizedBox(height: 24),
+              ],
             ),
           ),
         ),

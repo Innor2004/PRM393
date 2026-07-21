@@ -29,7 +29,7 @@ void main() {
     testWidgets('hiển thị màn hình quiz với tiêu đề bài học', (tester) async {
       AppColors.setMode(ThemeMode.light);
       final quiz = QuizProvider();
-      final lesson = Lesson(id: 1, chapterId: 1, title: 'Chuyển động thẳng đều', orderIndex: 1);
+      final lesson = Lesson(id: 1, chapterId: 1, title: 'Chuyển động thẳng đều', orderIndex: 1, estimatedMinutes: 15);
 
       await tester.pumpWidget(buildQuizTestApp(quiz: quiz, lesson: lesson));
       await tester.pump();
@@ -40,7 +40,7 @@ void main() {
     testWidgets('hiển thị trạng thái không có câu hỏi', (tester) async {
       AppColors.setMode(ThemeMode.light);
       final quiz = QuizProvider();
-      final lesson = Lesson(id: 99, chapterId: 1, title: 'Bài test', orderIndex: 1);
+      final lesson = Lesson(id: 99, chapterId: 1, title: 'Bài test', orderIndex: 1, estimatedMinutes: 15);
 
       await tester.pumpWidget(buildQuizTestApp(quiz: quiz, lesson: lesson));
       await tester.pump();
@@ -53,7 +53,7 @@ void main() {
     testWidgets('hiển thị thông tin bài học trên AppBar', (tester) async {
       AppColors.setMode(ThemeMode.light);
       final quiz = QuizProvider();
-      final lesson = Lesson(id: 1, chapterId: 1, title: 'Chuyển động thẳng đều', orderIndex: 1);
+      final lesson = Lesson(id: 1, chapterId: 1, title: 'Chuyển động thẳng đều', orderIndex: 1, estimatedMinutes: 15);
 
       await tester.pumpWidget(buildQuizTestApp(quiz: quiz, lesson: lesson));
       await tester.pump();

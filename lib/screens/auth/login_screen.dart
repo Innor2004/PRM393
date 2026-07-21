@@ -77,164 +77,254 @@ class _LoginScreenState extends State<LoginScreen>
             child: FadeTransition(
               opacity: _fadeAnim,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          gradient: AppColors.gradientPrimary,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.4),
-                              blurRadius: 36,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(Icons.auto_stories,
-                            size: 44, color: Colors.white),
-                      ),
-                      const SizedBox(height: 20),
-                      ShaderMask(
-                        shaderCallback: (bounds) =>
-                            AppColors.gradientAccent.createShader(bounds),
-                        child: const Text('PhysicsBook',
-                            style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white)),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Đăng nhập để tiếp tục',
-                          style: TextStyle(
-                              fontSize: 15, color: AppColors.textMuted)),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email_outlined),
-                        ),
-                        style: TextStyle(color: AppColors.textMain),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Vui lòng nhập email';
-                          }
-                          if (!value.contains('@')) return 'Email không hợp lệ';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          labelText: 'Mật khẩu',
-                          prefixIcon: const Icon(Icons.lock_outlined),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: AppColors.textMuted),
-                            onPressed: () =>
-                                setState(() => _obscurePassword = !_obscurePassword),
-                          ),
-                        ),
-                        style: TextStyle(color: AppColors.textMain),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Vui lòng nhập password';
-                          }
-                          if (value.length < 6) {
-                            return 'Mật khẩu tối thiểu 6 ký tự';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      Consumer<AuthProvider>(
-                        builder: (context, auth, _) {
-                          if (auth.error != null) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: Colors.red.withValues(alpha: 0.3)),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth >= 768;
+                    if (isWide) {
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 900),
+                          child: Container(
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: AppColors.bgDark.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(color: AppColors.glassBorder),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 10),
                                 ),
-                                child: Row(children: [
-                                  const Icon(Icons.error_outline,
-                                      color: Colors.red, size: 20),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(auth.error!,
-                                        style: const TextStyle(
-                                            color: Colors.red, fontSize: 13)),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 100,
+                                        height: 100,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(28),
+                                          gradient: AppColors.gradientPrimary,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.primary.withValues(alpha: 0.4),
+                                              blurRadius: 36,
+                                              offset: const Offset(0, 8),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Icon(Icons.auto_stories,
+                                            size: 50, color: Colors.white),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      ShaderMask(
+                                        shaderCallback: (bounds) =>
+                                            AppColors.gradientAccent.createShader(bounds),
+                                        child: const Text('PhysicsBook',
+                                            style: TextStyle(
+                                                fontSize: 36,
+                                                fontWeight: FontWeight.w900,
+                                                color: Colors.white)),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'Ứng dụng sách điện tử thông minh\nHọc Vật Lí 10 dễ dàng & trực quan',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            height: 1.5,
+                                            color: AppColors.textMuted),
+                                      ),
+                                    ],
                                   ),
-                                ]),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                      Consumer<AuthProvider>(
-                        builder: (context, auth, _) {
-                          if (auth.isLoading) {
-                            return _buildLoadingButton();
-                          }
-                          return _buildGradientButton(
-                            label: 'Đăng nhập',
-                            onPressed: _login,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text('Chưa có tài khoản?',
-                              style: TextStyle(color: AppColors.textMuted)),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (_) => const RegisterScreen())),
-                            child: ShaderMask(
-                              shaderCallback: (bounds) =>
-                                  AppColors.gradientAccent.createShader(bounds),
-                              child: const Text('Đăng ký',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold)),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 320,
+                                  margin: const EdgeInsets.symmetric(horizontal: 32),
+                                  color: AppColors.glassBorder,
+                                ),
+                                Expanded(
+                                  child: _buildForm(context),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
+                      );
+                    }
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 420),
+                        child: _buildForm(context, showLogo: true),
                       ),
-                    ],
-                  ),
-                ),
-                  ),
+                    );
+                  },
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildForm(BuildContext context, {bool showLogo = false}) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showLogo) ...[
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                gradient: AppColors.gradientPrimary,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                    blurRadius: 30,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.auto_stories,
+                  size: 40, color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            ShaderMask(
+              shaderCallback: (bounds) =>
+                  AppColors.gradientAccent.createShader(bounds),
+              child: const Text('PhysicsBook',
+                  style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white)),
+            ),
+            const SizedBox(height: 8),
+          ],
+          Text('Đăng nhập để tiếp tục',
+              style: TextStyle(
+                  fontSize: 15, color: AppColors.textMuted)),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
+            style: TextStyle(color: AppColors.textMain),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Vui lòng nhập email';
+              }
+              if (!value.contains('@')) return 'Email không hợp lệ';
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _passwordController,
+            obscureText: _obscurePassword,
+            decoration: InputDecoration(
+              labelText: 'Mật khẩu',
+              prefixIcon: const Icon(Icons.lock_outlined),
+              suffixIcon: IconButton(
+                icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    color: AppColors.textMuted),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
+            ),
+            style: TextStyle(color: AppColors.textMain),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Vui lòng nhập password';
+              }
+              if (value.length < 6) {
+                return 'Mật khẩu tối thiểu 6 ký tự';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 24),
+          Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              if (auth.error != null) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(children: [
+                      const Icon(Icons.error_outline,
+                          color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(auth.error!,
+                            style: const TextStyle(
+                                color: Colors.red, fontSize: 13)),
+                      ),
+                    ]),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              if (auth.isLoading) {
+                return _buildLoadingButton();
+              }
+              return _buildGradientButton(
+                label: 'Đăng nhập',
+                onPressed: _login,
+              );
+            },
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text('Chưa có tài khoản?',
+                  style: TextStyle(color: AppColors.textMuted)),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const RegisterScreen())),
+                child: ShaderMask(
+                  shaderCallback: (bounds) =>
+                      AppColors.gradientAccent.createShader(bounds),
+                  child: const Text('Đăng ký',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

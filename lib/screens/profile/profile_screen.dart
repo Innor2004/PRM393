@@ -31,187 +31,190 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         body: SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 850),
-                child: Column(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                Stack(
+                  clipBehavior: Clip.none,
                   children: [
-              const SizedBox(height: 20),
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppColors.gradientPrimary,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 30,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 44,
-                      backgroundColor: AppColors.bgDark,
-                      backgroundImage: _getAvatarImage(user?.avatarUrl),
-                      child: _hasAvatar(user?.avatarUrl)
-                          ? null
-                          : Icon(Icons.person, size: 44, color: AppColors.textMain),
-                    ),
-                  ),
-                  Positioned(
-                    right: -4,
-                    bottom: -4,
-                    child: Material(
-                      color: AppColors.primary,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: auth.isLoading
-                            ? null
-                            : () => _pickAndUploadAvatar(context),
-                        child: const Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Icon(Icons.camera_alt, size: 18, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                user?.name ?? 'Người dùng',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textMain,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                user?.email ?? '',
-                style: TextStyle(fontSize: 14, color: AppColors.textMuted),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: auth.isLoading
-                          ? null
-                          : () => _showEditNameDialog(context),
-                      icon: const Icon(Icons.edit_outlined),
-                      label: const Text('Sửa tên'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: auth.isLoading
-                          ? null
-                          : () => _showChangePasswordDialog(context),
-                      icon: const Icon(Icons.lock_outline),
-                      label: const Text('Đổi mật khẩu'),
-                    ),
-                  ),
-                ],
-              ),
-              if (auth.isLoading) ...[
-                const SizedBox(height: 16),
-                const LinearProgressIndicator(),
-              ],
-              const SizedBox(height: 28),
-              _buildGlassCard(
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        _buildIconBadge(
-                            gradient: AppColors.gradientPrimary,
-                            icon: Icons.trending_up),
-                        const SizedBox(width: 12),
-                        Text('Tiến độ học tập',
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textMain)),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildStatItem(
-                            '${progress.overallPercent.toInt()}%', 'Hoàn thành'),
-                        _buildStatItem(
-                            '${progress.progressList.length}', 'Bài đã học'),
-                        _buildStatItem('${badges.length}', 'Huy hiệu'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 28),
-              Row(
-                children: [
-                  _buildIconBadge(
-                      gradient: LinearGradient(colors: [
-                        AppColors.warning,
-                        Color(0xFFFCD34D),
-                      ]),
-                      icon: Icons.emoji_events),
-                  const SizedBox(width: 12),
-                  Text('Huy hiệu đạt được',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textMain)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              badges.isEmpty
-                  ? _buildGlassCard(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        children: [
-                          Icon(Icons.emoji_events_outlined,
-                              size: 48, color: AppColors.textDim),
-                          SizedBox(height: 12),
-                          Text(
-                            'Chưa có huy hiệu. Hãy học tập để đạt huy hiệu!',
-                            style: TextStyle(color: AppColors.textMuted),
-                            textAlign: TextAlign.center,
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppColors.gradientPrimary,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 30,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                    )
-                  : Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: badges
-                          .map((badge) => _buildBadgeCard(
-                                badge.name,
-                                badge.iconUrl ?? '🏆',
-                                badge.description ?? '',
-                              ))
-                          .toList(),
+                      child: CircleAvatar(
+                        radius: 44,
+                        backgroundColor: AppColors.bgDark,
+                        backgroundImage: _getAvatarImage(user?.avatarUrl),
+                        child: _hasAvatar(user?.avatarUrl)
+                            ? null
+                            : Icon(Icons.person, size: 44, color: AppColors.textMain),
+                      ),
                     ),
-              const SizedBox(height: 32),
-            ],
+                    Positioned(
+                      right: -4,
+                      bottom: -4,
+                      child: GestureDetector(
+                        onTap: () => _pickAndUploadAvatar(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: AppColors.gradientAccent,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.accent.withValues(alpha: 0.4),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.camera_alt,
+                              size: 16, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  user?.name ?? 'Người dùng',
+                  style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textMain),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user?.email ?? '',
+                  style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pickAndUploadAvatar(context),
+                        icon: const Icon(Icons.photo_camera, size: 18),
+                        label: const Text('Đổi ảnh đại diện'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textMain,
+                          side: BorderSide(color: AppColors.glassBorder),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showEditNameDialog(context),
+                        icon: const Icon(Icons.edit, size: 18),
+                        label: const Text('Đổi tên'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textMain,
+                          side: BorderSide(color: AppColors.glassBorder),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _buildGlassCard(
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          _buildIconBadge(
+                              gradient: AppColors.gradientPrimary,
+                              icon: Icons.pie_chart),
+                          const SizedBox(width: 12),
+                          Text('Thống kê học tập',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textMain)),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStatItem('${progress.overallPercent.toInt()}%',
+                              'Hoàn thành'),
+                          _buildStatItem(
+                              '${progress.progressList.length}', 'Bài đã học'),
+                          _buildStatItem('${badges.length}', 'Huy hiệu'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    _buildIconBadge(
+                        gradient: LinearGradient(colors: [
+                          AppColors.warning,
+                          Color(0xFFFCD34D),
+                        ]),
+                        icon: Icons.emoji_events),
+                    const SizedBox(width: 12),
+                    Text('Huy hiệu đạt được',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textMain)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                badges.isEmpty
+                    ? _buildGlassCard(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          children: [
+                            Icon(Icons.emoji_events_outlined,
+                                size: 48, color: AppColors.textDim),
+                            SizedBox(height: 12),
+                            Text(
+                              'Chưa có huy hiệu. Hãy học tập để đạt huy hiệu!',
+                              style: TextStyle(color: AppColors.textMuted),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                    : Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: badges
+                            .map((badge) => _buildBadgeCard(
+                                  badge.name,
+                                  badge.iconUrl ?? '🏆',
+                                  badge.description ?? '',
+                                ))
+                            .toList(),
+                      ),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  ),
-),
-);
+    );
   }
 
   Widget _buildGlassCard({required Widget child, EdgeInsetsGeometry? padding}) {

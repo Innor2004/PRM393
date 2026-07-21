@@ -140,39 +140,38 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(gradient: AppColors.gradientSurface),
       child: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: CustomScrollView(
+        child: CustomScrollView(
               slivers: [
                 SliverAppBar(
                   automaticallyImplyLeading: false,
-                  expandedHeight: 160,
+                expandedHeight: 185,
                   floating: false,
                   pinned: true,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppColors.primary, AppColors.primaryGlow],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                flexibleSpace: FlexibleSpaceBar(
+                    background: Builder(
+                      builder: (ctx) {
+                        final topPad = MediaQuery.of(ctx).viewPadding.top + 56;
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [AppColors.primary, AppColors.primaryGlow],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          padding: EdgeInsets.fromLTRB(20, topPad, 20, 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text('Chào ${user?.name ?? 'Bạn'}!',
                                         style: const TextStyle(
-                                            fontSize: 24,
+                                            fontSize: 22,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white)),
                                     const SizedBox(height: 4),
@@ -183,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       children: [
                                         Text('Hôm nay học tiếp bài mới nhé!',
                                             style: TextStyle(
-                                                fontSize: 14,
+                                                fontSize: 13,
                                                 color: Colors.white.withValues(alpha: 0.9))),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -220,6 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 12),
                               Container(
                                 width: 44,
                                 height: 44,
@@ -231,8 +231,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
                   actions: [
@@ -298,38 +298,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   sliver: Builder(
                     builder: (context) {
                       final width = MediaQuery.of(context).size.width;
-                      if (width >= 1050) {
+                      if (width >= 600) {
                         return SliverGrid(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 420,
                             mainAxisSpacing: 12,
                             crossAxisSpacing: 12,
-                            childAspectRatio: 3.5,
+                            mainAxisExtent: 108,
                           ),
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
                               final ch = lessonProv.chapters[index];
                               final isCompleted = lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList());
                               final progressStr = lessonProv.getChapterProgressStr(ch.id, completedLessonIds.toList());
-                              return _buildChapterCard(ch, isCompleted, progressStr);
-                            },
-                            childCount: lessonProv.chapters.length,
-                          ),
-                        );
-                      } else if (width >= 600) {
-                        return SliverGrid(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 3.2,
-                          ),
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final ch = lessonProv.chapters[index];
-                              final isCompleted = lessonProv.isChapterFullyCompleted(ch.id, completedLessonIds.toList());
-                              final progressStr = lessonProv.getChapterProgressStr(ch.id, completedLessonIds.toList());
-                              return _buildChapterCard(ch, isCompleted, progressStr);
+                              return _buildChapterCard(ch, isCompleted, progressStr, compact: true);
                             },
                             childCount: lessonProv.chapters.length,
                           ),
@@ -353,10 +335,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
+        );
+      }
 
   Widget _buildGlassCard({required Widget child, EdgeInsets? padding}) {
     return Container(
@@ -478,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildChapterCard(dynamic chapter, bool isCompleted, String progressStr) {
+  Widget _buildChapterCard(dynamic chapter, bool isCompleted, String progressStr, {bool compact = false}) {
     return Container(
       margin: EdgeInsets.zero,
       decoration: BoxDecoration(
@@ -506,12 +486,13 @@ class _HomeScreenState extends State<HomeScreen> {
             arguments: chapter,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
                     gradient: isCompleted
@@ -531,45 +512,50 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Chương ${chapter.orderIndex}: ${chapter.title}',
+                        chapter.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
                             color: AppColors.textMain),
                       ),
-                      if (chapter.description != null &&
-                          chapter.description!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            chapter.description!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                color: AppColors.textMuted, fontSize: 12),
-                          ),
-                        ),
+                      const SizedBox(height: 3),
+                      Text(
+                        (chapter.description != null && chapter.description!.isNotEmpty)
+                            ? 'Chương ${chapter.orderIndex} • ${chapter.description!}'
+                            : 'Chương ${chapter.orderIndex}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: AppColors.textMuted, fontSize: 12),
+                      ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       progressStr,
                       style: TextStyle(
                         color: isCompleted ? AppColors.primary : AppColors.textMuted,
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
@@ -577,7 +563,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: AppColors.glassFill,
                       ),
                       child: Icon(Icons.chevron_right,
-                          color: AppColors.textMuted, size: 20),
+                          color: AppColors.textMuted, size: 18),
                     ),
                   ],
                 ),

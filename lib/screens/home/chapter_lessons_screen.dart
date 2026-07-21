@@ -4,6 +4,7 @@ import '../../models/chapter.dart';
 import '../../providers/lesson_provider.dart';
 import '../../providers/progress_provider.dart';
 import '../../theme.dart';
+import '../../utils/responsive.dart';
 
 class ChapterLessonsScreen extends StatefulWidget {
   final Chapter chapter;
@@ -32,61 +33,55 @@ class _ChapterLessonsScreenState extends State<ChapterLessonsScreen> {
       child: Scaffold(
         appBar: AppBar(title: Text(widget.chapter.title)),
         body: SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1000),
-              child: lessons.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.menu_book, size: 48, color: AppColors.textDim),
-                          const SizedBox(height: 16),
-                          Text('Không có bài học nào',
-                              style: TextStyle(color: AppColors.textMuted)),
-                        ],
-                      ),
-                    )
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWide = constraints.maxWidth >= 650;
-                        if (isWide) {
-                          return GridView.builder(
-                            padding: const EdgeInsets.all(16),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 12,
-                              crossAxisSpacing: 12,
-                              childAspectRatio: 3.6,
-                            ),
-                            itemCount: lessons.length,
-                            itemBuilder: (context, index) {
-                              final lesson = lessons[index];
-                              final completed = progressProv.isLessonCompleted(lesson.id);
-                              final hasQuiz = completed ? progressProv.hasLessonQuiz(lesson.id) : true;
-                              final score = progressProv.getLessonScore(lesson.id);
+          child: lessons.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.menu_book, size: 48, color: AppColors.textDim),
+                      const SizedBox(height: 16),
+                      Text('Không có bài học nào',
+                          style: TextStyle(color: AppColors.textMuted)),
+                    ],
+                  ),
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final cols = Responsive.getGridColumnCount(constraints.maxWidth);
+                    if (cols > 1) {
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 420,
+                          mainAxisExtent: 124,
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 14,
+                        ),
+                        itemCount: lessons.length,
+                        itemBuilder: (context, index) {
+                          final lesson = lessons[index];
+                          final completed = progressProv.isLessonCompleted(lesson.id);
+                          final hasQuiz = completed ? progressProv.hasLessonQuiz(lesson.id) : true;
+                          final score = progressProv.getLessonScore(lesson.id);
 
-                              return _buildLessonCard(lesson, completed, score, hasQuiz: hasQuiz, margin: EdgeInsets.zero);
-                            },
-                          );
-                        }
-                        return ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: lessons.length,
-                          itemBuilder: (context, index) {
-                            final lesson = lessons[index];
-                            final completed = progressProv.isLessonCompleted(lesson.id);
-                            final hasQuiz = completed ? progressProv.hasLessonQuiz(lesson.id) : true;
-                            final score = progressProv.getLessonScore(lesson.id);
+                          return _buildLessonCard(lesson, completed, score, hasQuiz: hasQuiz, margin: EdgeInsets.zero);
+                        },
+                      );
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: lessons.length,
+                      itemBuilder: (context, index) {
+                        final lesson = lessons[index];
+                        final completed = progressProv.isLessonCompleted(lesson.id);
+                        final hasQuiz = completed ? progressProv.hasLessonQuiz(lesson.id) : true;
+                        final score = progressProv.getLessonScore(lesson.id);
 
-                            return _buildLessonCard(lesson, completed, score, hasQuiz: hasQuiz);
-                          },
-                        );
+                        return _buildLessonCard(lesson, completed, score, hasQuiz: hasQuiz);
                       },
-                    ),
-            ),
-          ),
+                    );
+                  },
+                ),
         ),
       ),
     );
@@ -118,8 +113,9 @@ class _ChapterLessonsScreenState extends State<ChapterLessonsScreen> {
           onTap: () => Navigator.of(context).pushNamed(
               '/lesson-detail', arguments: lesson),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   width: 44,
@@ -139,54 +135,76 @@ class _ChapterLessonsScreenState extends State<ChapterLessonsScreen> {
                     size: 22,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                          'Bài ${lesson.orderIndex}: ${lesson.title}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textMain)),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text('Độ khó: ', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                          Text('⭐' * lesson.difficultyStars, style: TextStyle(color: AppColors.warning, fontSize: 10)),
-                        ],
+                        'Bài ${lesson.orderIndex}: ${lesson.title}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: AppColors.textMain),
                       ),
                       const SizedBox(height: 6),
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 10,
+                        runSpacing: 4,
                         children: [
-                          Icon(Icons.timer_outlined,
-                              size: 14, color: AppColors.textMuted),
-                          const SizedBox(width: 4),
-                          Text('${lesson.estimatedMinutes} phút',
-                              style: TextStyle(
-                                  color: AppColors.textMuted, fontSize: 12)),
-                          if (completed && hasQuiz) ...[
-                            const SizedBox(width: 12),
-                            Icon(Icons.star,
-                                size: 14, color: AppColors.warning),
-                            const SizedBox(width: 4),
-                            Text('${score.toInt()}/10',
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('Độ khó: ',
+                                  style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                              Text('⭐' * lesson.difficultyStars,
+                                  style: TextStyle(color: AppColors.warning, fontSize: 10)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.timer_outlined,
+                                  size: 12, color: AppColors.textMuted),
+                              const SizedBox(width: 3),
+                              Text('${lesson.estimatedMinutes} phút',
                                   style: TextStyle(
-                                      color: AppColors.warning, fontSize: 12)),
-                          ],
+                                      color: AppColors.textMuted, fontSize: 11)),
+                            ],
+                          ),
+                          if (completed && hasQuiz)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.star,
+                                    size: 12, color: AppColors.warning),
+                                const SizedBox(width: 3),
+                                Text('${score.toInt()}/10',
+                                    style: TextStyle(
+                                        color: AppColors.warning,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
+                              ],
+                            ),
                         ],
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     color: AppColors.glassFill,
                   ),
                   child: Icon(Icons.chevron_right,
-                      color: AppColors.textMuted, size: 20),
+                      color: AppColors.textMuted, size: 18),
                 ),
               ],
             ),

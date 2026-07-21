@@ -124,10 +124,8 @@ class _InteractiveLabState extends State<InteractiveLab> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 800),
-        padding: const EdgeInsets.all(16),
+    return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgDark.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
@@ -162,7 +160,6 @@ class _InteractiveLabState extends State<InteractiveLab> {
             ..._buildSliders(),
           ],
         ],
-      ),
       ),
     );
   }
@@ -355,9 +352,14 @@ class _InteractiveLabState extends State<InteractiveLab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label,
-              style: TextStyle(
-                  fontSize: 13, color: AppColors.textMuted)),
+              Expanded(
+                child: Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 13, color: AppColors.textMuted)),
+              ),
+              const SizedBox(width: 8),
               Text(value.toStringAsFixed(1),
                   style: TextStyle(
                       fontWeight: FontWeight.w700,
@@ -671,10 +673,15 @@ class _InteractiveLabState extends State<InteractiveLab> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textMain)),
+          Expanded(
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMain)),
+          ),
+          const SizedBox(width: 8),
           ShaderMask(
             shaderCallback: (bounds) =>
                 AppColors.gradientAccent.createShader(bounds),

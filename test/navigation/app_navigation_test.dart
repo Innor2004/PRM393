@@ -119,7 +119,7 @@ void main() {
   group('Navigation - LessonDetail → Quiz', () {
     testWidgets('tap nút "Làm bài tập" → đến màn hình Quiz', (tester) async {
       final observer = TestNavigatorObserver();
-      final lesson = Lesson(id: 1, chapterId: 1, title: 'Bài 1', orderIndex: 1);
+      final lesson = Lesson(id: 1, chapterId: 1, title: 'Bài 1', orderIndex: 1, estimatedMinutes: 15);
 
       await tester.pumpWidget(
         MultiProvider(
@@ -153,7 +153,7 @@ void main() {
   group('Navigation - LessonDetail → Quiz (AppBar icon)', () {
     testWidgets('tap icon quiz trên AppBar → đến màn hình Quiz', (tester) async {
       final observer = TestNavigatorObserver();
-      final lesson = Lesson(id: 1, chapterId: 1, title: 'Bài 1', orderIndex: 1);
+      final lesson = Lesson(id: 1, chapterId: 1, title: 'Bài 1', orderIndex: 1, estimatedMinutes: 15);
 
       await tester.pumpWidget(
         MultiProvider(

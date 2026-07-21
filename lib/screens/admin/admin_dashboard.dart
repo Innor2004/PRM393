@@ -162,13 +162,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ],
         ),
         body: SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1400),
-              child: bodyContent,
-            ),
-          ),
+          child: bodyContent,
         ),
         bottomNavigationBar: _selectedStudent != null
             ? null
@@ -224,15 +218,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 )
               : LayoutBuilder(
                   builder: (context, constraints) {
-                    final isWide = constraints.maxWidth >= 750;
+                    final isWide = constraints.maxWidth >= 600;
                     if (isWide) {
                       return GridView.builder(
                         padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 420,
+                          mainAxisExtent: 82,
                           mainAxisSpacing: 10,
                           crossAxisSpacing: 10,
-                          childAspectRatio: 4.2,
                         ),
                         itemCount: _students.length,
                         itemBuilder: (_, i) => _buildStudentCard(_students[i], margin: EdgeInsets.zero),
